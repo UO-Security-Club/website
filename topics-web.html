@@ -74,41 +74,58 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="section-heading">Native Exploitation</h1>
-			<p class="lead section-lead">Topics:</p>
-			<p class="section-paragraph">Before learning the exploitation methods and defense mechanisms below, it's important that you first have a 
-				general understanding of the material listed in the <a href="topics-reversing.html">Reverse Engineering Topics.</a></p>
-				<p class="lead section-lead">Overflows:</p>
-				<p class="section-paragraph">Most program exploits rely memory corruption. Overflows are one of the most comman forms of memory corruption
-					and can be found in a variety of contexts. The main ones we'll cover are:</p>
-				<li>Stack-Based Buffer Overflows</li>
-				<li>Heap-Based Overflows</li>
-				<li>Integer Overflows</li><br>
+                    <h1 class="section-heading">Reverse Engineering</h1>
+			<p class="lead section-lead">Topics(x86):</p>
+			<p class="section-paragraph">UNIX Virtual Address Space:</p>
+				<p class="section-paragraph">Understand the purpose of each of the following segments as well as their basic structure and functionality.</p>
+				<li>Text Segment (also known as Code Segment)</li>
+				<li>Data Segment</li>
+				<li>Basic Service Set (BSS) Segment</li>
+				<li>Heap Segment</li>
+				<li>Stack Segment</li>
+			<p class="section-paragraph">x86 Processor Registers:</p>
+				<p class="section-paragraph">Understand the purpose of each register and their associated sub-registers.</p>
+				<li><u>General Purpose Registers:</u></li>
+				<li>EAX (Extended Accumulator register)</li>
+				<li>EBX (Extended Base register)</li>
+				<li>ECX (Extended Counter register)</li>
+				<li>EDX (Extended Data register)</li>
+				<li>EDI (Extended Destination Index register)</li>
+				<li>ESI (Extended Source Index register)</li>
+				<li>ESP (Extended Stack Pointer register)</li>
+				<li>EBP (Extended Base Pointer register)</li><br>
 
-				<p class="section-paragraph">Memory corruption vulnerabilities can allow an attacker to alter a program's execution-flow by overwriting
-					 data that is intended for later use by the CPU in executing the vulnerable program. The following are the most common
-					 techniques for exploiting memory corruption vulnerabilities:</p>
-				<li>shellcode</li>
-				<li>Return To Libc (Ret2Libc)</li>
-				<li>Return Oriented Programming (ROP)</li><br>
-				<p class="section-paragraph">Defenses: (It's important to know how NX and ASLR defend against shellcode and Ret2Libc respectively.)</p>
-				<li>Non-Executable Stack (NX)</li>
-				<li>Address Space Layout Randomization (ASLR)</li>
-				<li>Stack Canary</li><br>
+				<li><u>Segment Registers:</u></li>
+				<li>SS (Stack Segment register)</li>
+				<li>CS (Code Segment register)</li>
+				<li>DS (Data Segment register)</li>
+				<li>Extra data segment registers: ES, FS, GS</li><br>
 
-				<p class="lead section-lead">Heap-Based Vulnerabilities</p>
-				<p class="section-paragraph">There are a few types of vulnerabilities related to managing dynamic memory allocation. They can 
-					result in both, memory leaks, and memory corruption:</p>
-				<li>Use-After-Free</li>
-				<li>Double-Free</li>
+				<li>***These last two registers don't belong in either of the previous categories but are VERY important to understand.</li>
+				<li>EFLAGS</li>
+				<li>EIP (Extended Instruction Pointer register)</li>
 
-				<p class="lead section-lead">Format String Vulnerabilities:</p>
-				<p class="section-paragraph">Exploitation of this vulnerability does not rely on a form of overflow. Instead, it allows an attacker
-					to alter the arguments of a function that uses format strings (such as printf()). Even though this type of vulnerability is 
-					uncommon now-a-days, it's an important one to learn as it can be used for:</p>
-					<li>Memory Corruption</li>
-					<li>Memory Leak</li>
-				<p class="section-paragraph">It's important to note that memory leaks can be used to bypass certain types of stack canaries</p>
+			<p class="section-paragraph">x86 Instruction Set:</p>
+				<p class="section-paragraph">These are some of the most common x86 instructions that you will come across in the disassembly.<br>
+				However, x86 is a Complex Instruction Set Computer (CISC) architecture and has many, many more instructions than what is listed<br>
+				It is important to know the basic instructions, what they stand for, what they do, and what their operands are</p>
+				<li>push</li>
+				<li>pop</li>
+				<li>mov</li>
+				<li>add</li>
+				<li>sub</li>
+				<li>lea</li>
+				<li>jmp</li>
+				<li>cmp</li>
+				<li>test</li>
+				<li>leave</li>
+				<li>call</li>
+				<li>ret</li>
+
+			<p class="section-paragraph">x86 Function Stack Frame:</p>
+				<p class="section-paragraph">Each of these refer to how a callee function's stack frame is structured within the Stack Segment, how it's created<br>
+				when a function is called, how it passes and recieves arguments, and how it returns in order to restore the caller function.</p>
+				<li>Function Prologue</li>
                 </div>
             </div>
         </div>
