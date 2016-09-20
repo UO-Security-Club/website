@@ -77,20 +77,45 @@
                     <h1 class="section-heading">Web</h1>
 			<p class="lead section-lead">Topics:</p>
 			<p class="lead section-lead">Cross-Site-Scripting (XSS):</p>
-			<p class="section-paragraph">Know the difference between the different types of XSS and their countermeasures.</p>
+			<p class="section-paragraph">Know the difference between the different types of XSS and how to defend against them.</p>
 			<li>Persistent (Stored)</li>
 			<li>Non-Persistent (Reflected)</li>
 			<li>DOM</li>
-			<p class="section-paragraph">Countermeasures:</p>
+			<p class="section-paragraph">Defense:</p>
 			<li>Validation: (Whitelist vs Blacklist)</li>
 			<li>Encoding: (Context?)</li>
 			<li>HttpOnly Cookie Flag</li>
+			<li>Content Security Policy (CSP)</li>
 
 			<p class="lead section-lead">Cross-Site Request Forgery (CSRF):</p>
-			<p class="section-paragraph">This one is pretty straight forward but can be difficult to properly deffend against.</p>
-			<p class="section-paragraph">Countermeasures:</p>
+			<p class="section-paragraph">This attack is pretty straight forward but can be difficult to properly defend against.</p>
+			<p class="section-paragraph">Defense:</p>
 			<li>Synchronized Token Pattern</li>
-			<li>Same Origin Policy</li>
+			<li>Same Origin Policy (How can XSS bypass this?)</li>
+
+			<p class="lead section-lead">SQL Injection (SQLi):</p>
+			<p class="section-paragraph">Though less common in modern functional interfaces, many PHP and ASP applications rely on older interfaces 
+			and can be subject to SQLi attacks. A successful SQLi attack can, in short, read, modify, and even execute admin level operations on database.
+			Know the two types of SQLi, means of prevention, and how to test for SQLi vulnerabilities:</p>
+			<li>Standard SQLi</li>
+			<li>Blind SQLi</li>
+			<p class="section-paragraph">Defense:</p>
+			<li>Validate Input (whitelist)</li>
+			<li>Escape User-Supplied Input</li>
+			<li>Prepared Statements with Parameterized Queries</li>
+			<li>Stored Procedures</li>
+
+			<p class="lead section-lead">Session Pinning (or Session Fixation):</p>
+			<p class="section-paragraph">Common attack techniques:</p>
+			<li>Session token in URL</li>
+			<li>Session token in hidden form field</li>
+			<li>Session ID in cookie</li>
+
+			<p class="lead section-lead">Others: (Don't assume these are less important)</p>
+			<li>Command Injection</li>
+			<li>Local File Inclusion (LFI)</li>
+			<li>Remote File Inclusion (RFI)</li>
+			<li>HTTP Strict Transport Security (HSTS)</li>
 
                 </div>
             </div>
