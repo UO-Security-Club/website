@@ -18,14 +18,14 @@ body {
 }
 
 .image-bg-fluid-height {
-	background: url('background_triangle.png') no-repeat center center scroll;
+	background: url('background_triangle2.jpg') no-repeat center center scroll;
 	background-color:#0d0d0d;
     padding: 100px 0;
 	padding-left: 46px;
 }
 
 .image-bg-fixed-height {
-	background: url('background_triangle.png') no-repeat center center scroll;
+	background: url('background_triangle2.jpg') no-repeat center center scroll;
 	background-color:#0d0d0d;
     height: 450px;
 }
