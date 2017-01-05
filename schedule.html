@@ -75,8 +75,84 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="section-heading">Schedule</h1>
-			<p class="section-paragraph">Here is our tentative schedule for the term. As the term progresses, we will add slides and lecture material 
-						to this page in it's respective week.</p>
+<style>
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow-y: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #0d0d0d;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+button {
+    background:none!important;
+     border:none; 
+     padding:0!important;
+    
+    /*optional*/
+    font-family:arial,sans-serif; /*input has OS specific font-family*/
+     color:#069;
+     font-size: 25px;
+     text-decoration:underline;
+     cursor:pointer;
+}
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<!-- The Winter 2017 Modal-->
+<div id="Winter2017Modal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close" id="span1" onclick = "closeWithSpan(document.getElementById('Winter2017Modal'))" style="color:#FFFFFF;">&times;</span>
+    <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Schedule: Fall 2016</h1>
+                    <h2> TBA </h2>
+                </div>
+            </div>
+  </div>
+
+</div>
+<!-- The Fall 2016 Modal -->
+<div id="Fall2016Modal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close" id="span" onclick = "closeWithSpan(document.getElementById('Fall2016Modal'))" style="color:#FFFFFF;">&times;</span>
+    <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Schedule: Fall 2016</h1>
                     	<p class="lead section-lead">Week 1:</p>
 				<li>Introduction/Overview</li>
 				<li><a href="https://docs.google.com/presentation/d/1O1tdOyRu9nzY9zc1Yd7TU8W_sRBeIr4ZvQcGcLhdkmI/edit?usp=sharing">Slides</a></li>
@@ -110,6 +186,17 @@
                                 <li>TBA</li>
                 </div>
             </div>
+  </div>
+
+</div>
+
+<div id="scheduleButtons">
+    <li><button id="Fall2016Btn" onclick="openModal(document.getElementById('Fall2016Modal'))">Fall 2016</button></li>
+    <li><button id="Winter2017Btn" onclick="openModal(document.getElementById('Winter2017Modal'))">Winter 2017</button></li>
+</div>
+
+                </div>
+            </div>
         </div>
     </section>
 
@@ -135,6 +222,9 @@
 
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
+
+    <!-- Modal Script -->
+    <script src="js/modalScript.js"></script>
 
 </body>
 
