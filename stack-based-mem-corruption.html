@@ -71,7 +71,7 @@
                     <p class="lead section-lead">Virtual Address Space (32 bit ELFs):</p>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
-                    <img src="../lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
                     <p><i>figure 1</i></p>
                     <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
                     <b>Segment Descriptions:</b>
@@ -85,7 +85,7 @@
                     <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
                     <br><br>
                     The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. If you’re curious about the explicit segment starting addresses for a particular binary on a UNIX/Linux based system, you can throw the binary into GDB and examine its memory mappings with “info proc mappings”. </p>
-                    <img src="../lecture_note_images/stack-based-mem-corruption/figure2.png" alt="figure2" width="945" height="352">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure2.png" alt="figure2" width="945" height="352">
                     <p><i>figure 2</i></p>
                     <p class="section-lead">The above image describes the VAS layout of a 32-bit ELF binary named call_instr. The row outlined in red describes the Code segment, and going down the list, yellow describes the Heap, green describes the shared libraries, and purple describes the Stack. If you’re unfamiliar with gdb, the steps to view a program’s VAS layout are as follows:
                     <li>$gdb <_path/_to/_binary/_file></li>
@@ -94,7 +94,7 @@
                     <li>$gdb info proc mappings</li>
                     <br>
                     This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
-                    <img src="../lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3">
                     <p><i>figure 3</i></p>
 
                     <p class="lead section-lead">Stack Segment: </p>
