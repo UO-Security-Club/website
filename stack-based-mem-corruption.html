@@ -117,8 +117,8 @@
                     Let’s take a look at a basic example. Given the following source code:
                     <br><br>
                     <i>*Compiled with: gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example</i></p>
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure5.png" width="50%" height="50%">
-                    <p>[INSERT IMG 5]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure5.png" alt="figure5" width="40%" height="40%">
+                    <p>figure5</p>
 
                     <p class="section-lead">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
                     <br><br>
