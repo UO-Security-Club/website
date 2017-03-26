@@ -143,6 +143,20 @@
                     <br>
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
                     <p>[INSERT IMG 9]</p>
+
+                    <p class="section-lead">Now, if we overflow buf with input size greater than 32, the first byte of the canary variable will be overwritten. Here’s what the stack would roughly look like right before func1 returns:
+                    <i>*Note: the reason that our canary value looks mangled is because it’s bytes are in reverse order (e.g. Little Endian. Here’s a good resource link on Endianness if you need it: <a href="http://bfy.tw/39vC">Endianness</a>)</i></p>
+                    <p>[INSERT IMG 10]</p>
+
+                    <p class="section-lead">Here’s the results of testing our super-secure canary:</p>
+                    <p>[INSERT IMG 11]</p>
+
+                    <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
+                    Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
+                    <b>-fstack-protector: </b><br>
+                    Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br>
+                    <b>-fstack-protector-all: </b><br>
+                    Like -fstack-protector except that all functions are protected.<br><br></p>
                 </div>
             </div>
         </div>
