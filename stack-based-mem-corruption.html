@@ -71,7 +71,8 @@
                     <p class="lead section-lead">Virtual Address Space (32 bit ELFs):</p>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
-                    <p> [INSERT IMG 1]</p>
+                    <img src="../lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
+                    <p><i>figure 1</i></p>
                     <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
                     <b>Segment Descriptions:</b>
                     <li><b>Code: </b>Contains CPU instructions for executing the program</li>
@@ -84,7 +85,8 @@
                     <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
                     <br><br>
                     The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. If you’re curious about the explicit segment starting addresses for a particular binary on a UNIX/Linux based system, you can throw the binary into GDB and examine its memory mappings with “info proc mappings”. </p>
-                    <p>[INSERT IMG 2]</p>
+                    <img src="../lecture_note_images/stack-based-mem-corruption/figure2.png" alt="figure2" width="945" height="352">
+                    <p><i>figure 2</i></p>
                     <p class="section-lead">The above image describes the VAS layout of a 32-bit ELF binary named call_instr. The row outlined in red describes the Code segment, and going down the list, yellow describes the Heap, green describes the shared libraries, and purple describes the Stack. If you’re unfamiliar with gdb, the steps to view a program’s VAS layout are as follows:
                     <li>$gdb <_path/_to/_binary/_file></li>
                     <li>$gdb break <some_function_name></li>
@@ -92,7 +94,8 @@
                     <li>$gdb info proc mappings</li>
                     <br>
                     This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
-                    <p>[INSERT IMG 3]</p>
+                    <img src="../lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3">
+                    <p><i>figure 3</i></p>
 
                     <p class="lead section-lead">Stack Segment: </p>
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
@@ -100,7 +103,7 @@
                     <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
                     <br>
                     These two values need to be saved in order to resume execution of the caller function once the callee function has returned. In addition, two general-purpose processor registers are used in maintaining order of the stack:
-                    <br>
+                    <br><br>
                     <li><b>EBP (Extended Base Pointer): </b>Holds the base address of the currently executing function’s stack frame</li>
                     <li><b>ESP (Extended Stack Pointer): </b>Holds the current address of the top of the currently executing function’s stack frame (which implies the top of the stack segment as a whole)</li>
                     <br>
