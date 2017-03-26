@@ -12,10 +12,10 @@
     <title>UOSec</title>
 
     <!-- Bootstrap Core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="css/resources.css" rel="stylesheet">
+    <link href="../css/resources.css" rel="stylesheet">
 
 </head>
 
@@ -38,16 +38,16 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                         <li>
-                                <a href="resources.html">Resources</a>
+                                <a href="../resources.html">Resources</a>
                         </li>
                     <li>
-                        <a href="info.html">Info</a>
+                        <a href="../info.html">Info</a>
                     </li>
                     <li>
-                        <a href="challenges.html">Challenges</a>
+                        <a href="../challenges.html">Challenges</a>
                     </li>
                     <li>
-                        <a href="schedule.html">Schedule</a>
+                        <a href="../schedule.html">Schedule</a>
                     </li>
                 </ul>
             </div>
@@ -57,7 +57,7 @@
     </nav>
 
     <header class="image-bg-fluid-height">
-        <img class="img-responsive img-center" src="Images/UOSEC_logo2.png" alt="">
+        <img class="img-responsive img-center" src="../Images/UOSEC_logo2.png" alt="">
     </header>
 
     <!-- Content Section -->
@@ -66,16 +66,56 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="section-heading">Stack-Based Memory Corruption</h1>
-                    <h2 class="section-heading">Exploitation and Mitigation</h2><br>
+                    <h2">Exploitation and Mitigation</h2><br>
 
                     <p class="lead section-lead">Virtual Address Space (32 bit ELFs):</p>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
                     <p> [INSERT IMG 1]</p>
+                    <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br>
+                    <b>Segment Descriptions:</b>
+                    <li><b>Code: </b>Contains CPU instructions for executing the program</li>
+                    <li><b>Data: </b>Stores initialized global variables</li>
+                    <li><b>BSS: </b>Stores unitialized global variables</li>
+                    <li><b>Heap: </b>Linked-list for dynamic memory allocation</li>
+                    <li><b>Stack: </b>Contains CPU instructions for executing the program</li>
+                    <li><b>Kernel: </b>Space reserved for kernel execution</li>
+                    <br>
+                    <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
+                    <br>
+                    The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. If you’re curious about the explicit segment starting addresses for a particular binary on a UNIX/Linux based system, you can throw the binary into GDB and examine its memory mappings with “info proc mappings”. </p>
+                    <p>[INSERT IMG 2]</p>
                 </div>
             </div>
         </div>
     </section>
+    </section>
+
+    <!-- Fixed Height Image Aside -->
+    <!-- Image backgrounds are set within the full-width-pics.css file. -->
+    <aside class="image-bg-fixed-height"></aside>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <p>Copyright &copy; UOSec \x80\x01\x32\x0F</p>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container -->
+    </footer>
+
+    <!-- jQuery -->
+    <script src="../js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../js/bootstrap.min.js"></script>
+
+    <!-- Modal Script -->
+    <script src="../js/modalScript.js"></script>
 </body>
 </html>
 
