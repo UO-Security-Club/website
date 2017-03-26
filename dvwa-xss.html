@@ -15,7 +15,7 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="css/full-width-pics.css" rel="stylesheet">
+    <link href="css/resources.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -74,31 +74,53 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="section-heading">Announcements</h1>
-                    <p class="lead section-lead">Welcome Back Everyone!</p>
-                    <p class="section-paragraph"><li>Last updated: 1/4/2017 </li><br>Our first meeting is Tuesday (1/10/2017). This term we will be meeting in Allen Hall 140.  The time of the meetings will remain the same as previous terms (6pm to 8pm, every Tuesday). This term's meeting format will be a bit different from previous terms. Beginning with the 2nd meeting, we will  be doing shorter lectures divided into parts. Instead of longer lectures like last term, we've decided to take  a more hands on approach, so bring your laptops! </p>
+                    <h1 class="section-heading">Web</h1>
+			<p class="lead section-lead">Topics:</p>
+			<p class="lead section-lead">Cross-Site-Scripting (XSS):</p>
+			<p class="section-paragraph">Know the difference between the different types of XSS and how to defend against them.</p>
+			<li>Persistent (Stored)</li>
+			<li>Non-Persistent (Reflected)</li>
+			<li><a href="http://localhost/dvwa/vulnerabilities/xss_r/?name=and+thanks+for+the+cookie!%3Cscript%3Ealert%28document.cookie%29%3C%2Fscript%3E#">Try it!</a>
+			<li>DOM</li>
+			<p class="section-paragraph">Defense:</p>
+			<li>Validation: (Whitelist vs Blacklist)</li>
+			<li>Encoding: (Context?)</li>
+			<li>HttpOnly Cookie Flag</li>
+			<li>Content Security Policy (CSP)</li>
+
+			<p class="lead section-lead">Cross-Site Request Forgery (CSRF):</p>
+			<p class="section-paragraph">This attack is pretty straight forward but can be difficult to properly defend against.</p>
+			<p class="section-paragraph">Defense:</p>
+			<li>Synchronized Token Pattern</li>
+			<li>Same Origin Policy (How can XSS bypass this?)</li>
+
+			<p class="lead section-lead">SQL Injection (SQLi):</p>
+			<p class="section-paragraph">Though less common in modern functional interfaces, many PHP and ASP applications rely on older interfaces 
+			and can be subject to SQLi attacks. A successful SQLi attack can, in short, read, modify, and even execute admin level operations on database.
+			Know the two types of SQLi, means of prevention, and how to test for SQLi vulnerabilities:</p>
+			<li>Standard SQLi</li>
+			<li>Blind SQLi</li>
+			<p class="section-paragraph">Defense:</p>
+			<li>Validate Input (whitelist)</li>
+			<li>Escape User-Supplied Input</li>
+			<li>Prepared Statements with Parameterized Queries</li>
+			<li>Stored Procedures</li>
+
+			<p class="lead section-lead">Session Pinning (or Session Fixation):</p>
+			<p class="section-paragraph">Common attack techniques:</p>
+			<li>Session token in URL</li>
+			<li>Session token in hidden form field</li>
+			<li>Session ID in cookie</li>
+
+			<p class="lead section-lead">Others: (Don't assume these are less important)</p>
+			<li>Command Injection</li>
+			<li>Local File Inclusion (LFI)</li>
+			<li>Remote File Inclusion (RFI)</li>
+			<li>HTTP Strict Transport Security (HSTS)</li>
+
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- Fixed Height Image Aside -->
-    <!-- Image backgrounds are set within the full-width-pics.css file. -->
-    <aside class="image-bg-fixed-height"></aside>
-
-    <!-- Content Section -->
-    <section>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <h1 class="section-heading">Update Log</h1>
-                    <p class="lead section-lead">Checkout the new site!</p>
-                    <p class="section-paragraph"><li>We've started to compile a great list of resources on the <a href="resources.html">resources</a> tab. It's a work in progress but hopefully you will find it useful!<br>We've also put together a tentative lecture <a href="schedule.html">schedule</a>, but we will make an announcment if it changes.</p>
-                </div>
-            </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container -->
     </section>
 
     <!-- Footer -->

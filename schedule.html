@@ -75,10 +75,126 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="section-heading">Schedule</h1>
-                    <p class="lead section-lead">Week1</p>
-                    <p class="section-paragraph">Possibly make this section a grid layout or something more calander-esc</p>
-			<p class-"lead section-lead">Week2</p>
-			<p class="section-paragraph">Native!</p>
+<style>
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow-y: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #0d0d0d;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+button {
+    background:none!important;
+     border:none; 
+     padding:0!important;
+    
+    /*optional*/
+    font-family:arial,sans-serif; /*input has OS specific font-family*/
+     color:#069;
+     font-size: 25px;
+     text-decoration:underline;
+     cursor:pointer;
+}
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<!-- The Winter 2017 Modal-->
+<div id="Winter2017Modal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close" id="span1" onclick = "closeWithSpan(document.getElementById('Winter2017Modal'))" style="color:#FFFFFF;">&times;</span>
+    <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Schedule: Fall 2016</h1>
+                    <h2> TBA </h2>
+                </div>
+            </div>
+  </div>
+
+</div>
+<!-- The Fall 2016 Modal -->
+<div id="Fall2016Modal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close" id="span" onclick = "closeWithSpan(document.getElementById('Fall2016Modal'))" style="color:#FFFFFF;">&times;</span>
+    <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Schedule: Fall 2016</h1>
+                    	<p class="lead section-lead">Week 1:</p>
+				<li>Introduction/Overview</li>
+				<li><a href="https://docs.google.com/presentation/d/1O1tdOyRu9nzY9zc1Yd7TU8W_sRBeIr4ZvQcGcLhdkmI/edit?usp=sharing">Slides</a></li>
+			<p class="lead section-lead">Week 2:</p>
+				<li>VM Setup with DVWA & Burp Suite</li>
+				<li>Intro to Linux and basic memory corruption</li>
+			<p class="lead section-lead">Week 3:</p>
+				<li>Intro to Website Technologies</li>
+				<li><a href="https://docs.google.com/presentation/d/1jXqz2q8lEbk28gMzNdtRPjhURNLDIzcCkB1cDjJNeq8/edit?usp=sharing">Slides</a></li>
+				<li>Intro to reversing x86 and analyzing the Stack</li>
+				<li><a href="https://docs.google.com/presentation/d/1DD76QIGoiph-1oZ8edgpDBNXeH4AmQR8sXImou7daFU/edit?usp=sharing">Slides</a></li>
+			<p class="lead section-lead">Week 4:</p>
+				<li>Cross-Site Scripting (Attack/Defense)</li>
+				<li><a href="https://drive.google.com/open?id=1Z7JiUKRiC_jSEzLAE1hjFPTusbwxGoGHNN8hvYZt2Ug">Slides</a></li>
+				<li>Shellcode and Overwriting the Return Address</li>
+				<li><a href="https://drive.google.com/open?id=1dHJwq9lhdeCH70iJzVsI7hWHjazk7Q9A5dcQ3E8BagQ">Slides</a></li>
+			<p class="lead section-lead">Week 5:</p>
+                                <li>Cross-Site Request Forgery and Encoding/Validation/Content Security Policy</li>
+                                <li>Ret2Libc and Non-eXecutable Stack</li>
+			<p class="lead section-lead">Week 6:</p>
+                                <li>SQL Injection & Command Injection</li>
+                                <li>ROP and ASLR</li>
+			<p class="lead section-lead">Week 7:</p>
+                                <li>Intro to Android and Session Pinning</li>
+                                <li>Stack Canaries and String Format Vulnerabilities</li>
+			<p class="lead section-lead">Week 8:</p>
+                                <li>Web Python Scripting</li>
+                                <li>Heap Overflows and Use-After-Free</li>
+			<p class="lead section-lead">Week 9:</p>
+                                <li>Pentest a Web App</li>
+                                <li>TBA</li>
+                </div>
+            </div>
+  </div>
+
+</div>
+
+<div id="scheduleButtons">
+    <li><button id="Fall2016Btn" onclick="openModal(document.getElementById('Fall2016Modal'))">Fall 2016</button></li>
+    <li><button id="Winter2017Btn" onclick="openModal(document.getElementById('Winter2017Modal'))">Winter 2017</button></li>
+</div>
+
                 </div>
             </div>
         </div>
@@ -106,6 +222,9 @@
 
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
+
+    <!-- Modal Script -->
+    <script src="js/modalScript.js"></script>
 
 </body>
 
