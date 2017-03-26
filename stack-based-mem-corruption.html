@@ -72,7 +72,7 @@
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
                     <p> [INSERT IMG 1]</p>
-                    <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br>
+                    <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
                     <b>Segment Descriptions:</b>
                     <li><b>Code: </b>Contains CPU instructions for executing the program</li>
                     <li><b>Data: </b>Stores initialized global variables</li>
@@ -95,7 +95,49 @@
                     <p>[INSERT IMG 3]</p>
 
                     <p class="lead section-lead">Stack Segment: </p>
-                    <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:</p>
+                    <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
+                    <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
+                    <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
+                    <br>
+                    These two values need to be saved in order to resume execution of the caller function once the callee function has returned. In addition, two general-purpose processor registers are used in maintaining order of the stack:
+                    <li><b>EBP (Extended Base Pointer): </b>Holds the base address of the currently executing function’s stack frame</li>
+                    <li><b>ESP (Extended Stack Pointer): </b>Holds the current address of the top of the currently executing function’s stack frame (which implies the top of the stack segment as a whole)</li>
+                    <br>
+                    <i>*Note:  if you’re rusty on x86 general-purpose registers or unfamiliar with the x86 ISA, here’s a reading recommendation: <a href="http://www.cs.virginia.edu/~evans/cs216/guides/x86.html">Guide to x86</a></i>
+                    <br><br>
+                    Looking back at the example program used in gdb earlier, if we were to pause execution right before foo1() returned, it’s stack would look similar to the following image:</p>
+                    <p>[INSERT IMG 4]</p>
+
+                    <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
+                    <br>
+                    <p class="lead section-lead">Classic Stack Buffer Overflow: </p>
+                    <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
+                    <br>
+                    Let’s take a look at a basic example. Given the following source code:
+                    <br>
+                    <i>*Compiled with: gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example</i></p>
+                    <p>[INSERT IMG 5]</p>
+
+                    <p class="section-lead">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
+                    <br>
+                    <i>*Note: main’s stack-frame is colored blue and func1’s is colored green.</i></p>
+                    <p>[INSERT IMG 6]</p>
+
+                    <p class="section-lead">As the diagram attempts to demonstrate, user input data is being written towards saved data on the stack, such as <i>func1’s</i> error variable and even main’s stack-frame. If we provide, say 33 bytes of input data, then we can overwrite the first byte of <i>func1’s error</i> variable. Since main assumes an error occurred if <i>func1’s</i> return value is nonzero, we can easily test for the buffer overflow by providing 33 bytes of data and checking if the program prints “Failed to read input data”.
+                    <br>
+                    <i>*Note: that in the below example, providing 32 ‘A’s as input corrupted the error variable because a newline ‘\n’  character was appended to the end of our input by python’s print function, increasing the input size to 33 bytes.</i></p>
+                    <p>[INSERT IMG 7]</p>
+
+                    <p class="section-lead">As we can see from the above example, overflowing the buffer by 1 byte corrupted <i>func1’s error</i> variable. Even though our input was written to the buffer successfully, main received a nonzero return value from <i>func1</i> and assumed an error occurred, causing “Failed to read input data” to be printed to the terminal. Here’s what the stack segment would look like (roughly) right before <i>func1</i> returns after providing 32 ‘A’s as input:</p>
+                    <p>[INSERT IMG 8]</p>
+
+                    <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
+
+                    <p class="lead section-lead">Stack Canary: (Compiler Implemented)</p>
+                    <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return and instead the process will exit. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.
+                    <br>
+                    We can modify the previous buffer overflow example program to mimic a stack canary:</p>
+                    <p>[INSERT IMG 9]</p>
                 </div>
             </div>
         </div>
