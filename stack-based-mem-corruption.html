@@ -161,48 +161,10 @@
                     Like -fstack-protector except that all functions are protected.<hr><br><br>
                     If we recompile our previous program using gcc’s stack-protection:<br>
                     <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example2 <b>-fstack-protector</b></i><br>
-                    We can then look at the disassembly of <i>func1</i> for gcc’s canary implementation:<br><br>
-                    <hr>
-                    <br>gdb$ disassemble func1 
-                    <br>Dump of assembler code for function func1:
-                    <br>0x080484cb <+0>:    push   ebp
-                    <br>0x080484cc <+1>:    mov    ebp,esp
-                    <br>0x080484ce <+3>:    sub    esp,0x2c
-                    <br>0x080484d1 <+6>:    mov    eax,gs:0x14
-                    <br>0x080484d7 <+12>:   mov    DWORD PTR [ebp-0x4],eax
-                    <br>0x080484da <+15>:   xor    eax,eax
-                    <br>0x080484dc <+17>:   mov    DWORD PTR [ebp-0x2c],0x0
-                    <br>0x080484e3 <+24>:   mov    DWORD PTR [ebp-0x28],0xdeadbeef
-                    <br>0x080484ea <+31>:   mov    eax,ds:0x804988c
-                    <br>0x080484ef <+36>:   push   eax
-                    <br>0x080484f0 <+37>:   push   0x40
-                    <br>0x080484f2 <+39>:   lea    eax,[ebp-0x24]
-                    <br>0x080484f5 <+42>:   push   eax
-                    <br>0x080484f6 <+43>:   call   0x8048370 <fgets@plt>
-                    <br>0x080484fb <+48>:   add    esp,0xc
-                    <br>0x080484fe <+51>:   test   eax,eax
-                    <br>0x08048500 <+53>:   je     0x8048524 <func1+89>
-                    <br>0x08048502 <+55>:   cmp    DWORD PTR [ebp-0x28],0xdeadbeef
-                    <br>0x08048509 <+62>:   je     0x804851f <func1+84>
-                    <br>0x0804850b <+64>:   push   0x8048610
-                    <br>0x08048510 <+69>:   call   0x8048390 <puts@plt>
-                    <br>0x08048515 <+74>:   add    esp,0x4
-                    <br>0x08048518 <+77>:   push   0x1
-                    <br>0x0804851a <+79>:   call   0x80483b0 <exit@plt>
-                    <br>0x0804851f <+84>:   mov    eax,DWORD PTR [ebp-0x2c]
-                    <br>0x08048522 <+87>:   jmp    0x804852e <func1+99>
-                    <br>0x08048524 <+89>:   mov    DWORD PTR [ebp-0x2c],0x1
-                    <br>0x0804852b <+96>:   mov    eax,DWORD PTR [ebp-0x2c]
-                    <br>0x0804852e <+99>:   mov    edx,DWORD PTR [ebp-0x4]
-                    <br>0x08048531 <+102>:  xor    edx,DWORD PTR gs:0x14
-                    <br>0x08048538 <+109>:  je     0x804853f <func1+116>
-                    <br>0x0804853a <+111>:  call   0x8048380 <__stack_chk_fail@plt>
-                    <br>0x0804853f <+116>:  leave  
-                    <br>0x08048540 <+117>:  ret    
-                    <br>End of assembler dump.
-                    <br>gdb$ 
-                    <hr><br><br>
-                    </p>
+                    We can then look at the disassembly of <i>func1</i> for gcc’s canary implementation:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure12.png" alt="figure12" width="480" height="500">
+                    <p><i>figure 12</i></p>
                 </div>
             </div>
         </div>
