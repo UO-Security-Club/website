@@ -142,10 +142,12 @@
                     <p class="section-lead">As the diagram attempts to demonstrate, user input data is being written towards saved data on the stack, such as <i>func1’s</i> error variable and even main’s stack-frame. If we provide, say 33 bytes of input data, then we can overwrite the first byte of <i>func1’s error</i> variable. Since main assumes an error occurred if <i>func1’s</i> return value is nonzero, we can easily test for the buffer overflow by providing 33 bytes of data and checking if the program prints “Failed to read input data”.
                     <br><br>
                     <i>*Note: that in the below example, providing 32 ‘A’s as input corrupted the error variable because a newline ‘\n’  character was appended to the end of our input by python’s print function, increasing the input size to 33 bytes.</i></p>
-                    <p>[INSERT IMG 7]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure7.png" alt="figure7" width="956" height="116">
+                    <p><i>figure 7</i></p>
 
                     <p class="section-lead">As we can see from the above example, overflowing the buffer by 1 byte corrupted <i>func1’s error</i> variable. Even though our input was written to the buffer successfully, main received a nonzero return value from <i>func1</i> and assumed an error occurred, causing “Failed to read input data” to be printed to the terminal. Here’s what the stack segment would look like (roughly) right before <i>func1</i> returns after providing 32 ‘A’s as input:</p>
-                    <p>[INSERT IMG 8]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure8.png" alt="figure8">
+                    <p><i>figure 8</i></p>
 
                     <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
                     <br><br>
@@ -161,10 +163,12 @@
 
                     <p class="section-lead">Now, if we overflow buf with input size greater than 32, the first byte of the canary variable will be overwritten. Here’s what the stack would roughly look like right before func1 returns:
                     <i>*Note: the reason that our canary value looks mangled is because it’s bytes are in reverse order (e.g. Little Endian. Here’s a good resource link on Endianness if you need it: <a href="http://bfy.tw/39vC">Endianness</a>)</i></p>
-                    <p>[INSERT IMG 10]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure10.png" alt="figure10">
+                    <p><i>figure 10</i></p>
 
                     <p class="section-lead">Here’s the results of testing our super-secure canary:</p>
-                    <p>[INSERT IMG 11]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure11.png" alt="figure11" width="762" height="95">
+                    <p><i>figure 11</i></p>
 
                     <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
                     Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
@@ -186,7 +190,8 @@
                     <br>
                     <i>*Note: that func1’s error variable and canary variable have moved to [ebp-0x2c] and [ebp-0x28] respectively. GCC has moved their place in the stack-frame to the other side of our buffer, out of write-direction. This is so they aren't overwritten in the event of a buffer overflow originating from that particular stack-frame. It’s like standing up-wind of a cattle farm, if you catch my 'drift'.</i></p>
 
-                    <p>[INSERT IMG 13]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure13.png" alt="figure13">
+                    <p><i>figure 13</i></p>
                     <br>
                     <br>
 
