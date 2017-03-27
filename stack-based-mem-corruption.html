@@ -137,12 +137,13 @@
                     <p>[INSERT IMG 8]</p>
 
                     <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
-
+                    <br><br>
                     <p class="lead section-lead">Stack Canary: (Compiler Implemented)</p>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return and instead the process will exit. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.
                     <br>
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
-                    <p>[INSERT IMG 9]</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure9.png" alt="figure3" width="500" height="600">
+                    <p><i>figure 9</i></p>
 
                     <p class="section-lead">Now, if we overflow buf with input size greater than 32, the first byte of the canary variable will be overwritten. Here’s what the stack would roughly look like right before func1 returns:
                     <i>*Note: the reason that our canary value looks mangled is because it’s bytes are in reverse order (e.g. Little Endian. Here’s a good resource link on Endianness if you need it: <a href="http://bfy.tw/39vC">Endianness</a>)</i></p>
@@ -154,7 +155,7 @@
                     <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
                     Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
                     <b>-fstack-protector: </b><br>
-                    Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br>
+                    Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br><br>
                     <b>-fstack-protector-all: </b><br>
                     Like -fstack-protector except that all functions are protected.<br><br></p>
                 </div>
