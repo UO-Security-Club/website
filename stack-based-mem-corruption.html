@@ -69,6 +69,7 @@
                     <h2>Exploitation and Mitigation</h2><br>
 
                     <p class="lead section-lead">Virtual Address Space (32 bit ELFs):</p>
+                    <hr>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
@@ -97,7 +98,9 @@
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
                     <p><i>figure 3</i></p>
 
+
                     <p class="lead section-lead">Stack Segment: </p>
+                    <hr>
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
                     <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
                     <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
@@ -114,7 +117,10 @@
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
                     <br>
+
+
                     <p class="lead section-lead">Classic Stack Buffer Overflow: </p>
+                    <hr>
                     <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
                     Let’s take a look at a basic example. Given the following source code:
@@ -138,7 +144,10 @@
 
                     <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
                     <br><br>
-                    <p class="lead section-lead">Stack Canary: (Compiler Implemented)</p>
+
+
+                    <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
+                    <hr>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return and instead the process will exit. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.
                     <br>
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
@@ -158,13 +167,80 @@
                     <b>-fstack-protector: </b><br>
                     Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br><br>
                     <b>-fstack-protector-all: </b><br>
-                    Like -fstack-protector except that all functions are protected.<hr><br><br>
+                    Like -fstack-protector except that all functions are protected.<hr><br>
                     If we recompile our previous program using gcc’s stack-protection:<br>
                     <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example2 <b>-fstack-protector</b></i><br>
                     We can then look at the disassembly of <i>func1</i> for gcc’s canary implementation:</p>
 
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure12.png" alt="figure12" width="480" height="500">
                     <p><i>figure 12</i></p>
+
+                    <p class="section-lead">The lines of disassembly above that are outlined in blue/red are the instructions implemented by gcc to store and check the canary value. The three lines in blue (1) move the randomly generated canary value from the Data segment into the eax register. (2) The canary value is then moved from the eax register into func1’s stack-frame at [ebp-0x4]. Notice that the first parameter for fgets is an address at [ebp-0x24], which is the start address of our buffer (instruction is highlighted in blue). Which means that the canary value is directly on top of our buffer; 0x24 - 0x4 = 0x20 = (2 * 16^1) + (0 * 16^0) = 32. The next instruction then xor’s eax with itself to zero-out the register and proceed with normal execution.
+                    <br><br>
+                    Right before func1’s function epilogue, there’s four bolded instructions that check the canary value for any changes. First, the canary value is copied into the edx register. The edx register is then xor’d with a backup of the original canary value stored in the Data segment. If the xor results in 0, then the je ( jump if equal) instruction jumps execution flow to the function epilogue. However, if the xor result is non-zero, then __stack_chk_fail is called which ultimately exits the process. The diagram below depicts how the stack segment would look immediately after user input is written to the buffer:
+                    <br>
+                    <i>*Note: that func1’s error variable and canary variable have moved to [ebp-0x2c] and [ebp-0x28] respectively. GCC has moved their place in the stack-frame to the other side of our buffer, out of write-direction. The reason for this is to prevent a function’s other local variables from being overwritten in the event of a buffer overflow. It’s kind of the equivalent of not looking down the barrel of a gun.</i></p>
+
+                    <p>[INSERT IMG 13]</p>
+                    <br>
+                    <br>
+
+                    <p class="lead section-lead"><b>Bypassing Stack Canaries:</b></p>
+                    <p class="section-lead">This brings us to methods and techniques for bypassing stack canaries. Which should also help to enlighten you on how to properly implement canaries when securing your own programs. The following is an outline of this section:
+                    <br>
+                    <li>Guessing the canary value or canary value is static</li>
+                    <li>Memory Leak</li>
+                    <li>Overwrite canary backup stored in Data segment</li>
+                    <li>Further reading: <a href="https://www.corelan.be/index.php/2009/09/21/exploit-writing-tutorial-part-6-bypassing-stack-cookies-safeseh-hw-dep-and-aslr/">Bypassing Stack Cookies</a></li></p>
+                    <br>
+                    <p class="lead section-lead">Guessing the canary value:</p>
+                    <p class="section-lead">Since the stack canary value is compared with the backup canary value in the Data segment, it doesn’t matter if we overwrote the canary, so long as we overwrite it with the same value; the stack check will be none the wiser.
+                    <br>
+                    Looking back at our own implementation of a stack canary (before we compiled it with -fstack-protector), we can easily bypass it by overwriting func1’s canary variable with the same value it was initialized to; 0xdeadbeef. It’s a good idea to look at the disassembly nonetheless just to double-check our payload alignment:</p>
+                    
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure14.png" alt="figure14" width="495" height="408">
+                    <p><i>figure 14</i></p>
+
+                    <p class="section-lead"></p>From the outlined instruction above, we can confirm that func1’s canary variable occupies the first four bytes of memory adjacent to the buffer. So if we give 32 bytes of input plus four bytes of 0xdeadbeef, then the process should not exit and instead return to main. Lets test it out:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure15.png" alt="figure15" width="600" height="60">
+                    <p><i>figure 15</i></p>
+
+                    <p class="section-lead">Perfect! So in the first command, 32 ‘A’s were given as input which corrupted the canary value as shown earlier (remember that a newline character is appended to our input). Then, in the second command, 32 ‘A’s were given plus the four bytes of 0xdeadbeef (note that the four bytes are in little endian; least significant bytes first) resulting in the check to pass and returning execution to main even though we overwrote the canary and corrupted the error variable.
+                    <br>
+                    Admittedly, that example is pretty trivial. The canary value is hard-coded and can be identified with a quick glance at the disassembly; no guessing needed. Next is an example of when a canary value is not hard-coded, but instead is randomized per process execution. However, the randomized value is very predictable and we can take the same approach in attempting to overwrite it with an equal value. The source code is shown below:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure16.png" alt="figure16" width="566" height="1011">
+                    <p><i>figure 16</i></p>
+
+                    <p class="section-lead">Here I suggest that you try this one on your own. See if you can create a payload script that will predict the canary value, overwrite it, and still return to main. If you’re at a loss for how to predict the canary value in this scenario, I would read up on insecure RNG seeds. This type of vulnerability is applicable across the board, not just in terms of C and stack canaries.
+                    <br>
+                    <i>*Note: The above code can be compiled with:<br>
+                    gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example3</i></p>
+                    <br>
+                    <br>
+
+                    <p class="lead section-lead">Memory Leak:</p>
+                    <p class="section-lead">Here we’re going to assume that the stack canary is implemented properly, it’s randomized per call, and the RNG seed is near impossible to predict. Now, our options for bypassing it are mostly based on other possible vulnerabilities within the program. One such vulnerability would be a memory leak that allows us to read the canary value from memory at execution time. The following C code is a modification of the canary_example.c program that now asks the user to input an ID number for the input data. We are a going to compile it with gcc’s stack protection on:
+                    <br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example4 -fstack-protector</i></p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure17.png" alt="figure17" width="623" height="1097">
+                    <p><i>figure 17</i></p>
+
+                    <p class="section-lead">On line 27 of the program, there’s a blatant Format-String vulnerability (if you’re unfamiliar with this type of vulnerability, here’s a good article about it: <a href="https://www.exploit-db.com/docs/28476.pdf">Exploit-DB: Format String Vulnerability</a>), which we can use to read the canary value before the second fgets call. The following image shows the output of running the program normally, and then using hex format specifiers (%x) in the ID to leverage the Format-String vulnerability into printing memory contents:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure18.png" alt="figure18" width="775" height="162">
+                    <p><i>figure 18</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is the stack canary generated by gcc’s stack protection. Surrounding the canary are (left) the 0 values from func1’s call to memset on line 25, and (right) the saved EBP and Return Address values of func1. Now all that’s needed to exploit the program is a script that we can use to parse the program output for the canary value and dynamically craft a payload for the buffer overflow vulnerability. My suggestion is to use python’s subprocess module or this python exploit development library: <a href="https://github.com/Gallopsled/pwntools">PwnTools</a>. I’ll leave creation of the exploit script to you though. It’s good practice!</p>
+                    <br>
+                    <br>
+
+
+                    <p class="lead section-lead"><b>Shellcode:</b></p>
+                    <hr>
+                    <p class="section-lead">Working on it!</p>
                 </div>
             </div>
         </div>
