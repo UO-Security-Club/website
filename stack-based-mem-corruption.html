@@ -155,8 +155,18 @@
 
                     <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
                     <hr>
-                    <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return and instead the process will exit. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.
+                    <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
                     <br>
+                    <p class="lead section-lead"><b>Section-Index:</b></p>
+                    <p class="section-lead">
+                    <li>Mimicing a Stack Canary</li>
+                    <li>GCC's Stack-Protector</li>
+                    <li>Bypassing Stack Canaries</li>
+                    </p>
+                    <hr>
+                    <br>
+                    <p class="lead section-lead"><b>Mimicing a Stack Canary:</b></p>
+                    <p class="section-lead">
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure9.png" alt="figure3" width="500" height="600">
                     <p><i>figure 9</i></p>
