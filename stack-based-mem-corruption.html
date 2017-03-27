@@ -154,10 +154,55 @@
 
                     <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
                     Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
+                    <hr>
                     <b>-fstack-protector: </b><br>
                     Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br><br>
                     <b>-fstack-protector-all: </b><br>
-                    Like -fstack-protector except that all functions are protected.<br><br></p>
+                    Like -fstack-protector except that all functions are protected.<hr><br><br>
+                    If we recompile our previous program using gcc’s stack-protection:<br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example2 <b>-fstack-protector</b></i><br>
+                    We can then look at the disassembly of <i>func1</i> for gcc’s canary implementation:<br><br>
+                    <hr>
+                    gdb$ disassemble func1 
+                    Dump of assembler code for function func1:
+                    0x080484cb <+0>:    push   ebp
+                    0x080484cc <+1>:    mov    ebp,esp
+                    0x080484ce <+3>:    sub    esp,0x2c
+                    0x080484d1 <+6>:    mov    eax,gs:0x14
+                    0x080484d7 <+12>:   mov    DWORD PTR [ebp-0x4],eax
+                    0x080484da <+15>:   xor    eax,eax
+                    0x080484dc <+17>:   mov    DWORD PTR [ebp-0x2c],0x0
+                    0x080484e3 <+24>:   mov    DWORD PTR [ebp-0x28],0xdeadbeef
+                    0x080484ea <+31>:   mov    eax,ds:0x804988c
+                    0x080484ef <+36>:   push   eax
+                    0x080484f0 <+37>:   push   0x40
+                    0x080484f2 <+39>:   lea    eax,[ebp-0x24]
+                    0x080484f5 <+42>:   push   eax
+                    0x080484f6 <+43>:   call   0x8048370 <fgets@plt>
+                    0x080484fb <+48>:   add    esp,0xc
+                    0x080484fe <+51>:   test   eax,eax
+                    0x08048500 <+53>:   je     0x8048524 <func1+89>
+                    0x08048502 <+55>:   cmp    DWORD PTR [ebp-0x28],0xdeadbeef
+                    0x08048509 <+62>:   je     0x804851f <func1+84>
+                    0x0804850b <+64>:   push   0x8048610
+                    0x08048510 <+69>:   call   0x8048390 <puts@plt>
+                    0x08048515 <+74>:   add    esp,0x4
+                    0x08048518 <+77>:    push   0x1
+                    0x0804851a <+79>:                call   0x80483b0 <exit@plt>
+                    0x0804851f <+84>:                mov    eax,DWORD PTR [ebp-0x2c]
+                    0x08048522 <+87>:    jmp    0x804852e <func1+99>
+                    0x08048524 <+89>:    mov    DWORD PTR [ebp-0x2c],0x1
+                    0x0804852b <+96>:    mov    eax,DWORD PTR [ebp-0x2c]
+                    0x0804852e <+99>:    mov    edx,DWORD PTR [ebp-0x4]
+                    0x08048531 <+102>:   xor    edx,DWORD PTR gs:0x14
+                    0x08048538 <+109>:   je     0x804853f <func1+116>
+                    0x0804853a <+111>:   call   0x8048380 <__stack_chk_fail@plt>
+                    0x0804853f <+116>:   leave  
+                    0x08048540 <+117>:   ret    
+                    End of assembler dump.
+                    gdb$ 
+                    <hr><br><br>
+                    </p>
                 </div>
             </div>
         </div>
