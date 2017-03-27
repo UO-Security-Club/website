@@ -68,7 +68,7 @@
                     <h1 class="section-heading">Stack-Based Memory Corruption</h1>
                     <h2>Exploitation and Mitigation</h2><br>
 
-                    <p class="lead section-lead">Virtual Address Space (32 bit ELFs):</p>
+                    <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
                     <hr>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
@@ -97,9 +97,11 @@
                     This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
                     <p><i>figure 3</i></p>
+                    <br>
+                    <br>
 
 
-                    <p class="lead section-lead">Stack Segment: </p>
+                    <p class="lead section-lead"><b>Stack Segment: </b></p>
                     <hr>
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
                     <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
@@ -117,9 +119,10 @@
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
                     <br>
+                    <br>
+                    
 
-
-                    <p class="lead section-lead">Classic Stack Buffer Overflow: </p>
+                    <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
                     <hr>
                     <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
@@ -203,14 +206,14 @@
 
                     <p class="section-lead"></p>From the outlined instruction above, we can confirm that func1’s canary variable occupies the first four bytes of memory adjacent to the buffer. So if we give 32 bytes of input plus four bytes of 0xdeadbeef, then the process should not exit and instead return to main. Lets test it out:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure15.png" alt="figure15" width="600" height="60">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure15.png" alt="figure15" width="775" height="77">
                     <p><i>figure 15</i></p>
 
                     <p class="section-lead">Perfect! So in the first command, 32 ‘A’s were given as input which corrupted the canary value as shown earlier (remember that a newline character is appended to our input). Then, in the second command, 32 ‘A’s were given plus the four bytes of 0xdeadbeef (note that the four bytes are in little endian; least significant bytes first) resulting in the check to pass and returning execution to main even though we overwrote the canary and corrupted the error variable.
                     <br>
                     Admittedly, that example is pretty trivial. The canary value is hard-coded and can be identified with a quick glance at the disassembly; no guessing needed. Next is an example of when a canary value is not hard-coded, but instead is randomized per process execution. However, the randomized value is very predictable and we can take the same approach in attempting to overwrite it with an equal value. The source code is shown below:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure16.png" alt="figure16" width="566" height="1011">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure16.png" alt="figure16" width="490" height="876">
                     <p><i>figure 16</i></p>
 
                     <p class="section-lead">Here I suggest that you try this one on your own. See if you can create a payload script that will predict the canary value, overwrite it, and still return to main. If you’re at a loss for how to predict the canary value in this scenario, I would read up on insecure RNG seeds. This type of vulnerability is applicable across the board, not just in terms of C and stack canaries.
@@ -225,7 +228,7 @@
                     <br>
                     <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example4 -fstack-protector</i></p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure17.png" alt="figure17" width="623" height="1097">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure17.png" alt="figure17" width="498" height="877">
                     <p><i>figure 17</i></p>
 
                     <p class="section-lead">On line 27 of the program, there’s a blatant Format-String vulnerability (if you’re unfamiliar with this type of vulnerability, here’s a good article about it: <a href="https://www.exploit-db.com/docs/28476.pdf">Exploit-DB: Format String Vulnerability</a>), which we can use to read the canary value before the second fgets call. The following image shows the output of running the program normally, and then using hex format specifiers (%x) in the ID to leverage the Format-String vulnerability into printing memory contents:</p>
