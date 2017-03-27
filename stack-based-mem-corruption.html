@@ -157,7 +157,7 @@
                     <hr>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
                     <br>
-                    <p class="lead section-lead"><b>Section-Index:</b></p>
+                    <p class="lead section-lead">Section-Index:</p>
                     <p class="section-lead">
                     <li>Mimicing a Stack Canary</li>
                     <li>GCC's Stack-Protector</li>
@@ -179,7 +179,9 @@
                     <p class="section-lead">Here’s the results of testing our super-secure canary:</p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure11.png" alt="figure11" width="762" height="95">
                     <p><i>figure 11</i></p>
+                    <br>
 
+                    <p class="lead section-lead"><b>GCC's Stack-Protector:</b></p>
                     <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
                     Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
                     <hr>
@@ -265,6 +267,16 @@
 
                     <p class="lead section-lead"><b>Shellcode:</b></p>
                     <hr>
+                    <p class="section-lead">Summary</p>
+                    <br>
+                    <p class="lead section-lead">Section-Index:</p>
+                    <p class="section-lead">
+                    <li>Creating Shellcode</li>
+                    <li>Returning Execution Flow</li>
+                    <li>Drop NOPS not COPS:</li>
+                    </p>
+                    <hr>
+                    <br>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
