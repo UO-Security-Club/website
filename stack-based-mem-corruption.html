@@ -267,20 +267,111 @@
 
                     <p class="lead section-lead"><b>Shellcode:</b></p>
                     <hr>
-                    <p class="section-lead">Summary</p>
+                    <p class="section-lead">Shellcode is nothing more than a sequence of architecture specific machine instructions that can be injected into a running process. If execution flow can be redirected to the shellcode, then the processor will begin executing those instructions. The reason this type payload is referred to as shellcode is that it is generally used to pop a new shell from the vulnerable process, allowing an attacker to directly interact with the host system and even escalate their privileges within that system.</p>
                     <br>
                     <p class="lead section-lead">Section-Index:</p>
                     <p class="section-lead">
                     <li>Creating Shellcode</li>
-                    <li>Returning Execution Flow</li>
-                    <li>NOP Sleds, the Astroglide for you processor</li>
+                    <li>Using Shellcode</li>
+                    <li>NOP Sleds, the Astroglide for your processor</li>
                     </p>
                     <hr>
                     <br>
+                    <p class="lead section-lead"><b>Creating Shellcode</b></p>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
+                    <p class="lead section-lead"><b>Using Shellcode</b></p>
+                    <p class="section-lead">Let’s look at two shellcode exploit examples. Both will be executed by exploiting the buffer overflow vulnerability from the previous canary_example program except with a slight modification.</p>
+                    <br>
+                    <p class="lead section-lead">Example 1</p>
+                    <p class="section-lead">In this first example we’re going to add a simple function to the canary_example program (which I’ve renamed to shellcode_example.c for this section). The print_protected_data() function is simple but will never be called under normal execution flow. The source code and gcc compiler options are shown below:<br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 shellcode_example.c -o shellcode_example -z execstack<br>
+                    *Note: The compiler option “-z execstack” at the end is to disable executable stack protection, which is discussed in the next section.</i></p>
 
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure19.png" alt="figure20" width="523" height="575">
+                    <p><i>figure 19</i></p>
+
+                    <p class="section-lead">Given the above program, our first goal will be to print the string “This should never be printed!” using shellcode. All and all, this is a pretty trivial goal but serves to prove that we can easily write any process memory out over standard streams. The other addition to the above program is the third line in func1() which prints out the starting address for it’s 32-byte buffer. This will make it easier for us to redirect execution flow to our shellcode. Of course, we could use a debugger or disassembler to pinpoint the address but that’s out of scope for this material.</p>
+                    <br>
+                    <p class="lead section-lead">Redirecting Execution Flow</p>
+                    <p class="section-lead">In order to execute our shellcode via classic stack-based buffer overflow, we’ll need to overwrite func1()’s Return Address and point it to the start of our shellcode (aka, the starting address of the buffer). Since a callee’s Return Address is a pointer value to the next instruction to be executed by the caller function once the callee returns, we can overwrite it with a different address. This way, when the callee returns, instead of execution resuming where the caller left off, it instead attempts to execute instructions at the address we overwrote the Return Address with. Below is a diagram showing a rough depiction of what the shellcode_example program will look like right before func1 returns:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure20.png" alt="figure20">
+                    <p><i>figure 20</i></p>
+
+                    <p class="section-lead">In this context, func1 is the callee function (stack frame is colored green-ish) which was called by the main function, which is the caller function (stack frame is colored light-gray). Notice that the Return Addresses (denoted with RET) both point to an address within the Code segment. Our goal will be to point func1’s Return Address to the start of the buffer, in which case, if we’ve stashed our shellcode there, the processor will begin to execute it!</p>
+                    <br>
+                    <p class="lead section-lead">Crafting the Payload</p>
+                    <p class="section-lead">Now we need to create some shellcode which will be a sequence of machine instructions that will write the “protected” string out to the terminal. We can do this by first writing the instructions in assembly code, and then use an assembler to, well…, assemble our shellcode (what a surprise!). We’re going to take advantage of the UNIX system call procedure which indexes system calls in a table and passes arguments over general purpose registers.<br>
+                    <i>*Note: If you’re unfamiliar with UNIX System Calls, I would suggest reading this tutorial: <a href="http://asm.sourceforge.net/intro/hello.html">SourceForge asm tutorial</a> and here’s a nice system call reference for 32-bit UNIX systems: <a href="http://syscalls.kernelgrok.com/">Syscall Ref Guide</a></i><br>
+                    We’re essentially going to write assembly instructions that are equivalent to (from a source code perspective):</p>
+
+                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure21.png" alt="figure21">
+                    <p><i>figure 21</i></p>
+
+                    <p class="section-lead">In order to setup the write() system call, first we need to load 4 into the EAX register; 4 is the system call number for write(). Once the the kernel’s system call handler is invoked using the int 0x80 or syscall instructions, it will expect the EAX register to hold the number of the system call to invoke. From there, we will need to load the arguments for write() going from left to right into the EBX, ECX, and EDX registers respectively (e.g. EBX = 1, ECX = string_addr, EDX = 12). Now we just need to find the address of the “protected” string and we’ll be good to go.
+                    <br>
+                    Using the objdump command we can disassemble the print_protected_data() function to find the string’s address. The following image shows the output from objdump which is piped into grep so we can filter it for the print_protected_data() function:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure22.png" alt="figure22" width="806" height="165">
+                    <p><i>figure 22</i></p>
+
+                    <p class="section-lead">Outlined in blue is the argument passed to puts(), which is the address of the string for it to print. We can safely assume that it’s the address of the string we’re looking for since the function shouldn’t be printing anything else (you can double check in a debugger like gdb if you want). So now that we’ve got all of our arguments for the write() system call, let’s create the assembly for the shellcode.
+                    <br>
+                    Create a new assembly file with the “.s” extension and then write out the instructions. The following image shows the instructions a chose to write but there are many different ways to achieve the functionality:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure23.png" alt="figure23" width="740" height="318">
+                    <p><i>figure 23</i></p>
+
+                    <p class="section-lead"><i>*Note: the al, bl, and dl, sub-registers are used instead of eax, ebx, and edx. Since 1-byte values are being loaded into these registers, we can minimize the shellcode size by using the 8-bit sub-registers. This will also get rid of unwanted null-bytes in the shellcode.</i></p>
+                    <br>
+
+                    <p class="section-lead">The lines of assembly after the first int 0x80 instruction are used to call the exit() system call once write() has returned. It isn’t necessary to call exit() but it will prevent the process from seg-faulting after our shellcode has executed.
+                    <br>
+                    Compile your shellcode using the nasm command (checkout the nasm manual pages if you’re not familiar with it). This will produce an object file that we can use hexdump on to print out the machine instructions for our shellcode. Shown below is the output from the above assembly example:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure24.png" alt="figure24" width="838" height="75">
+                    <p><i>figure 24</i></p>
+
+                    <p class="section-lead">Now we can use a simple Python script to craft the payload and send it as input to the shellcode_example program. The payload will need to:<br>
+                    <li>Fill the buffer with shellcode (the above shellcode is 25 bytes).</li>
+                    <li>Fill the remaining space up until the Return Address with junk bytes: (buf + error var + saved base pointer = 32 + 4 + 4 = 40 bytes; 40 - 25 = 15) The junk bytes can be whatever you want them to be, they’re just there to fill space.</li>
+                    <li>Overwrite the 4-byte Return Address with the starting address of buf (if you run the shellcode_example program, this will be the address it prints out before asking for user input).</li><br>
+                    The image below shows the Python script that will print the payload:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure25.png" alt="figure25" width="852" height="129">
+                    <p><i>figure 25</i></p>
+
+                    <p class="section-lead">The script output can then be piped directly into an execution of the shellcode_example program and if all goes as planned, the string “This should never be printed” should be written out to the terminal:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure26.png" alt="figure26" width="862" height="86">
+                    <p><i>figure 26</i></p>
+
+                    <p class="section-lead">Great, so now that our shellcode is working, we can try a more verbose approach to writing process memory out. For example, what if we were conducting a remote black-box test of the previous program and we didn’t have access to the binary file, how could we print out the protected data? Well, we know that we’re dealing with a 32-bit ELF, and we know that memory segments like the Code and Data segments start at a specific virtual address, 0x08048000 and 0x08049000 respectively… So, let’s just print out the entire Code segment!</p>
+                    <br>
+                    <p class="lead section-lead">Getting your own copy of a remote binary</p>
+                    <p class="section-lead">Let’s modify the assembly instructions of our shellcode so that instead of writing out 12 bytes from the address 0x080485a0, it writes out 4095 (0xfff) bytes of data from the Code segment of the process. The following image shows the modified assembly instructions:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure27.png" alt="figure27" width="740" height="318">
+                    <p><i>figure 27</i></p>
+                    <p class="section-lead"><i>*Note: on line 9, the register has been changed from dl to dx since the size parameter is now larger than 1 byte. The dx register is a 16-bit sub-register of EDX.</i></p>
+                    <br>
+                    <p class="section-lead">Now we can assemble our shellcode with nasm, put it in our Python script from earlier, pipe it in as input to an execution of the shellcode_example program, and check the output. Though, I suggest redirecting the output into a new file or else this won’t be of much use. The following screen-shot shows the results of first running the exploit and redirecting its output to a file called “output_file”, then running the file command on “output_file”, and finally attempting to execute the “output_file”:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure28.png" alt="figure28" width="852" height="129">
+                    <p><i>figure 28</i></p>
+
+                    <p class="section-lead">Perfect! So now we have our own copy of the binary file that we can disassemble, reverse engineer, and test locally! (that’s assuming a scenario where we didn’t before and we could only run the process remotely).</p>
+                    <br>
+                    <p class="lead section-lead">Example 2</p>
+                    <p class="section-lead">[TO-DO]</p>
+                    <br>
+                    <br>
+                    <p class="lead section-lead"><b>NOP Sleds</b></p>
+                    <p class="section-lead">[TO-DO]</p>
+                    <br>
+                    <br>
 
                     <p class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
                     <hr>
