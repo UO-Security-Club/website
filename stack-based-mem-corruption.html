@@ -112,9 +112,9 @@
                     This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
                     <p><i>figure 3</i></p>
-                    <br>
 
-                    <div id="StackSegment"><br></div>
+
+                    <div id="StackSegment"><br><br></div>
                     <p class="lead section-lead"><b>Stack Segment: </b></p>
                     <hr>
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
