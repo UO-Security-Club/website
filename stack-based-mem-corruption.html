@@ -81,9 +81,9 @@
                     <li><a href="#ROPing">Return Oriented Programming</a></li>
                     </p>
                     <hr>
-                    <br>
-
-                    <p id="VASpace" class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
+                    
+                    <div id="VASpace"><br><br></div>
+                    <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
                     <hr>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
@@ -133,11 +133,10 @@
                     <p><i>figure 4</i></p>
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
-                    <br>
-                    <br>
+                    
 
-
-                    <p id="ClassicStackBufferOverflow" class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
+                    <div id="ClassicStackBufferOverflow"><br><br></div>
+                    <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
                     <hr>
                     <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
@@ -164,10 +163,10 @@
                     <p><i>figure 8</i></p>
 
                     <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
-                    <br><br>
+                    
 
-
-                    <p id="StackCanary" class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
+                    <div id="StackCanary"><br><br></div>
+                    <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
                     <hr>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
                     <br>
@@ -275,11 +274,10 @@
 
                     <p id="ExceptionHandler" class="lead section-lead">Corrupting the Exception Handler:</p>
                     <p class="section-lead">[TO-DO]</p>
-                    <br>
-                    <br>
+                    
 
-
-                    <p id="Shellcode" class="lead section-lead"><b>Shellcode</b></p>
+                    <div id="Shellcode"><br><br></div>
+                    <p class="lead section-lead"><b>Shellcode</b></p>
                     <hr>
                     <p class="section-lead">Shellcode is nothing more than a sequence of architecture specific machine instructions that can be injected into a running process. If execution flow can be redirected to the shellcode, then the processor will begin executing those instructions. The reason this type payload is referred to as shellcode is that it is generally used to pop a new shell from the vulnerable process, allowing an attacker to directly interact with the host system and even escalate their privileges within that system.</p>
                     <br>
@@ -388,10 +386,10 @@
                     <br>
                     <p id="NOPsleds" class="lead section-lead"><b>NOP Sleds</b></p>
                     <p class="section-lead">[TO-DO]</p>
-                    <br>
-                    <br>
+                   
 
-                    <p id="YourMomsAdirtyBit" class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
+                    <div id="YourMomsAdirtyBit"><br><br></div>
+                    <p class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
                     <hr>
                     <p class="section-lead">Summary</p>
                     <br>
@@ -403,11 +401,10 @@
                     <hr>
                     <br>
                     <p class="section-lead">[TO-DO]</p>
-                    <br>
-                    <br>
+                    
 
-
-                    <p id="Ret2Libc" class="lead section-lead"><b>Return-To-Libc:</b></p>
+                    <div id="Ret2Libc"><br><br></div>
+                    <p class="lead section-lead"><b>Return-To-Libc:</b></p>
                     <hr>
                     <p class="section-lead">Summary</p>
                     <br>
@@ -420,18 +417,16 @@
                     <hr>
                     <br>
                     <p class="section-lead">[TO-DO]</p>
-                    <br>
-                    <br>
+                    
 
-
-                    <p id="ASLR" class="lead section-lead"><b>Address Space Layout Randomization: (OS implemented)</b></p>
+                    <div id="ASLR"><br><br></div>
+                    <p class="lead section-lead"><b>Address Space Layout Randomization: (OS implemented)</b></p>
                     <hr>
                     <p class="section-lead">[TO-DO]</p>
-                    <br>
-                    <br>
+                    
 
-
-                    <p id="ROPing" class="lead section-lead"><b>Return-Oriented Programming:</b></p>
+                    <div id="ROPing"><br><br></div>
+                    <p class="lead section-lead"><b>Return-Oriented Programming:</b></p>
                     <hr>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
