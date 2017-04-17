@@ -70,20 +70,20 @@
                     <br>
                     <p class="lead section-lead">Index:</p>
                     <p class="section-lead">
-                    <li>Virtual Address Space of 32 bit ELFs</li>
-                    <li>Understanding the Stack Segment</li>
-                    <li>Classic Stack Buffer Overflow</li>
-                    <li>Stack Canaries</li>
-                    <li>Shellcode</li>
-                    <li>Non-eXecutable Stack</li>
-                    <li>Ret-To-Libc</li>
-                    <li>Address Space Layout Randomization</li>
-                    <li>Return Oriented Programming</li>
+                    <li><a href="#VASpace">Virtual Address Space of 32 bit ELFs</a></li>
+                    <li><a href="#StackSegment">Understanding the Stack Segment</a></li>
+                    <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</li>
+                    <li><a href="#StackCanary">Stack Canaries</a></li>
+                    <li><a href="#Shellcode">Shellcode</a></li>
+                    <li><a href="#YourMomsAdirtyBit">Non-eXecutable Stack</a></li>
+                    <li><a href="#Ret2Libc">Ret-To-Libc</a></li>
+                    <li><a href="#ASLR">Address Space Layout Randomization</a></li>
+                    <li><a href="#ROPing">Return Oriented Programming</a></li>
                     </p>
                     <hr>
                     <br>
 
-                    <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
+                    <p id="VASpace" class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
                     <hr>
                     <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
@@ -116,7 +116,7 @@
                     <br>
 
 
-                    <p class="lead section-lead"><b>Stack Segment: </b></p>
+                    <p id="StackSegment" class="lead section-lead"><b>Stack Segment: </b></p>
                     <hr>
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
                     <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
@@ -138,7 +138,7 @@
                     <br>
 
 
-                    <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
+                    <p id="ClassicStackBufferOverflow" class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
                     <hr>
                     <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
@@ -168,19 +168,19 @@
                     <br><br>
 
 
-                    <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
+                    <p id="StackCanary" class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
                     <hr>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
                     <br>
                     <p class="lead section-lead">Section-Index:</p>
                     <p class="section-lead">
-                    <li>Mimicing a Stack Canary</li>
-                    <li>GCC's Stack-Protector</li>
-                    <li>Bypassing Stack Canaries</li>
+                    <li><a href="#Mimicing">Mimicing a Stack Canary</a></li>
+                    <li><a href="#Stack-Protector">GCC's Stack-Protector</a></li>
+                    <li><a href="#BypassingCanaries">Bypassing Stack Canaries</a></li>
                     </p>
                     <hr>
                     <br>
-                    <p class="lead section-lead"><b>Mimicing a Stack Canary:</b></p>
+                    <p id="Mimicing" class="lead section-lead"><b>Mimicing a Stack Canary:</b></p>
                     <p class="section-lead">
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure9.png" alt="figure3" width="500" height="600">
@@ -196,7 +196,7 @@
                     <p><i>figure 11</i></p>
                     <br>
 
-                    <p class="lead section-lead"><b>GCC's Stack-Protector:</b></p>
+                    <p id="Stack-Protector" class="lead section-lead"><b>GCC's Stack-Protector:</b></p>
                     <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
                     Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
                     <hr>
@@ -222,15 +222,15 @@
                     <br>
                     <br>
 
-                    <p class="lead section-lead"><b>Bypassing Stack Canaries:</b></p>
+                    <p id="BypassingCanaries" class="lead section-lead"><b>Bypassing Stack Canaries:</b></p>
                     <p class="section-lead">This brings us to methods and techniques for bypassing stack canaries. Which should also help to enlighten you on how to properly implement canaries when securing your own programs. The following is an outline of this section:
                     <br>
-                    <li>Guessing the canary value or canary value is static</li>
-                    <li>Memory Leak</li>
-                    <li>Corrupting the Exception Handler</li>
+                    <li><a href="#GuessingCanaries">Guessing the canary value</a></li>
+                    <li><a href="#MemLeak">Memory Leak</a></li>
+                    <li><a href="#ExceptionHandler">Corrupting the Exception Handler</a></li>
                     <li>Further reading: <a href="https://www.corelan.be/index.php/2009/09/21/exploit-writing-tutorial-part-6-bypassing-stack-cookies-safeseh-hw-dep-and-aslr/">Bypassing Stack Cookies</a></li></p>
                     <br>
-                    <p class="lead section-lead">Guessing the canary value:</p>
+                    <p id="GuessingCanaries" class="lead section-lead">Guessing the canary value:</p>
                     <p class="section-lead">Since the stack canary value is compared with the backup canary value in the Data segment, it doesn’t matter if we overwrote the canary, so long as we overwrite it with the same value; the stack check will be none the wiser.
                     <br>
                     Looking back at our own implementation of a stack canary (before we compiled it with -fstack-protector), we can easily bypass it by overwriting func1’s canary variable with the same value it was initialized to; 0xdeadbeef. It’s a good idea to look at the disassembly nonetheless just to double-check our payload alignment:</p>
@@ -257,7 +257,7 @@
                     <br>
                     <br>
 
-                    <p class="lead section-lead">Memory Leak:</p>
+                    <p id="MemLeak" class="lead section-lead">Memory Leak:</p>
                     <p class="section-lead">Here we’re going to assume that the stack canary is implemented properly, it’s randomized per call, and the RNG seed is near impossible to predict. Now, our options for bypassing it are mostly based on other possible vulnerabilities within the program. One such vulnerability would be a memory leak that allows us to read the canary value from memory at execution time. The following C code is a modification of the canary_example.c program that now asks the user to input an ID number for the input data. We are a going to compile it with gcc’s stack protection on:
                     <br>
                     <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example4 -fstack-protector</i></p>
@@ -274,29 +274,33 @@
                     <br>
                     <br>
 
-                    <p class="lead section-lead">Corrupting the Exception Handler:</p>
+                    <p id="ExceptionHandler" class="lead section-lead">Corrupting the Exception Handler:</p>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
 
 
-                    <p class="lead section-lead"><b>Shellcode</b></p>
+                    <p id="Shellcode" class="lead section-lead"><b>Shellcode</b></p>
                     <hr>
                     <p class="section-lead">Shellcode is nothing more than a sequence of architecture specific machine instructions that can be injected into a running process. If execution flow can be redirected to the shellcode, then the processor will begin executing those instructions. The reason this type payload is referred to as shellcode is that it is generally used to pop a new shell from the vulnerable process, allowing an attacker to directly interact with the host system and even escalate their privileges within that system.</p>
                     <br>
                     <p class="lead section-lead">Section-Index:</p>
                     <p class="section-lead">
-                    <li>Creating Shellcode</li>
-                    <li>Using Shellcode</li>
-                    <li>NOP Sleds, the Astroglide for your processor</li>
+                    <li><a href="#CreatingShellcode">Creating Shellcode</a></li>
+                    <li><a href="#UsingShellcode">Using Shellcode:</a></li>
+                    <li><a href="#RedirectingExecution">Example 1: Redirecting Execution Flow</a></li>
+                    <li><a href="#CraftingThePayload">Example 1: Crafting The Payload</a></li>
+                    <li><a href="#WritingOutTheTextSeg">Example 1: Writing Out the Text Segment</a></li>
+                    <li><a href="#Example2">Example 2</a></li>
+                    <li><a href="#NOPsleds">NOP Sleds, the Astroglide for your processor</a></li>
                     </p>
                     <hr>
                     <br>
-                    <p class="lead section-lead"><b>Creating Shellcode</b></p>
+                    <p id="CreatingShellcode" class="lead section-lead"><b>Creating Shellcode</b></p>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
-                    <p class="lead section-lead"><b>Using Shellcode</b></p>
+                    <p id="UsingShellcode" class="lead section-lead"><b>Using Shellcode</b></p>
                     <p class="section-lead">Let’s look at two shellcode exploit examples. Both will be executed by exploiting the buffer overflow vulnerability from the previous canary_example program except with a slight modification.</p>
                     <br>
                     <p class="lead section-lead">Example 1</p>
@@ -309,7 +313,7 @@
 
                     <p class="section-lead">Given the above program, our first goal will be to print the string “This should never be printed!” using shellcode. All and all, this is a pretty trivial goal but serves to prove that we can easily write any process memory out over standard streams. The other addition to the above program is the third line in func1() which prints out the starting address for it’s 32-byte buffer. This will make it easier for us to redirect execution flow to our shellcode. Of course, we could use a debugger or disassembler to pinpoint the address but that’s out of scope for this material.</p>
                     <br>
-                    <p class="lead section-lead">Redirecting Execution Flow</p>
+                    <p id="RedirectingExecution" class="lead section-lead">Redirecting Execution Flow</p>
                     <p class="section-lead">In order to execute our shellcode via classic stack-based buffer overflow, we’ll need to overwrite func1()’s Return Address and point it to the start of our shellcode (aka, the starting address of the buffer). Since a callee’s Return Address is a pointer value to the next instruction to be executed by the caller function once the callee returns, we can overwrite it with a different address. This way, when the callee returns, instead of execution resuming where the caller left off, it instead attempts to execute instructions at the address we overwrote the Return Address with. Below is a diagram showing a rough depiction of what the shellcode_example program will look like right before func1 returns:</p>
 
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure20.png" alt="figure20">
@@ -317,7 +321,7 @@
 
                     <p class="section-lead">In this context, func1 is the callee function (stack frame is colored green-ish) which was called by the main function, which is the caller function (stack frame is colored light-gray). Notice that the Return Addresses (denoted with RET) both point to an address within the Code segment. Our goal will be to point func1’s Return Address to the start of the buffer, in which case, if we’ve stashed our shellcode there, the processor will begin to execute it!</p>
                     <br>
-                    <p class="lead section-lead">Crafting the Payload</p>
+                    <p id="CraftingThePayload" class="lead section-lead">Crafting the Payload</p>
                     <p class="section-lead">Now we need to create some shellcode which will be a sequence of machine instructions that will write the “protected” string out to the terminal. We can do this by first writing the instructions in assembly code, and then use an assembler to, well…, assemble our shellcode (what a surprise!). We’re going to take advantage of the UNIX system call procedure which indexes system calls in a table and passes arguments over general purpose registers.<br>
                     <i>*Note: If you’re unfamiliar with UNIX System Calls, I would suggest reading this tutorial: <a href="http://asm.sourceforge.net/intro/hello.html">SourceForge asm tutorial</a> and here’s a nice system call reference for 32-bit UNIX systems: <a href="http://syscalls.kernelgrok.com/">Syscall Ref Guide</a></i><br>
                     We’re essentially going to write assembly instructions that are equivalent to (from a source code perspective):</p>
@@ -365,7 +369,7 @@
 
                     <p class="section-lead">Great, so now that our shellcode is working, we can try a more verbose approach to writing process memory out. For example, what if we were conducting a remote black-box test of the previous program and we didn’t have access to the binary file, how could we print out the protected data? Well, we know that we’re dealing with a 32-bit ELF, and we know that memory segments like the Code and Data segments start at a specific virtual address, 0x08048000 and 0x08049000 respectively… So, let’s just print out the entire Code segment!</p>
                     <br>
-                    <p class="lead section-lead">Getting your own copy of a remote binary</p>
+                    <p id="WritingOutTheTextSeg" class="lead section-lead">Getting your own copy of a remote binary</p>
                     <p class="section-lead">Let’s modify the assembly instructions of our shellcode so that instead of writing out 12 bytes from the address 0x080485a0, it writes out 4095 (0xfff) bytes of data from the Code segment of the process. The following image shows the modified assembly instructions:</p>
 
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure27.png" alt="figure27" width="740" height="318">
@@ -379,16 +383,16 @@
 
                     <p class="section-lead">Perfect! So now we have our own copy of the binary file that we can disassemble, reverse engineer, and test locally! (that’s assuming a scenario where we didn’t before and we could only run the process remotely).</p>
                     <br>
-                    <p class="lead section-lead">Example 2</p>
+                    <p id="Example2" class="lead section-lead">Example 2</p>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
-                    <p class="lead section-lead"><b>NOP Sleds</b></p>
+                    <p id="NOPsleds" class="lead section-lead"><b>NOP Sleds</b></p>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
 
-                    <p class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
+                    <p id="YourMomsAdirtyBit" class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
                     <hr>
                     <p class="section-lead">Summary</p>
                     <br>
@@ -404,7 +408,7 @@
                     <br>
 
 
-                    <p class="lead section-lead"><b>Return-To-Libc:</b></p>
+                    <p id="Ret2Libc" class="lead section-lead"><b>Return-To-Libc:</b></p>
                     <hr>
                     <p class="section-lead">Summary</p>
                     <br>
@@ -421,14 +425,14 @@
                     <br>
 
 
-                    <p class="lead section-lead"><b>Address Space Layout Randomization: (OS implemented)</b></p>
+                    <p id="ASLR" class="lead section-lead"><b>Address Space Layout Randomization: (OS implemented)</b></p>
                     <hr>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
                     <br>
 
 
-                    <p class="lead section-lead"><b>Return-Oriented Programming:</b></p>
+                    <p id="ROPing" class="lead section-lead"><b>Return-Oriented Programming:</b></p>
                     <hr>
                     <p class="section-lead">[TO-DO]</p>
                     <br>
