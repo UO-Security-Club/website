@@ -1,0 +1,50 @@
+/* Gist Embed - Dark Theme Styling - Thanks to MattD */
+  
+/* Body */
+.gist-data tbody { background-color: #161613; }
+
+/* Line Numbers */
+.gist-data tbody td:nth-of-type(1) {
+  color: #7c7c7a !important;
+}
+
+/* Code */
+.gist-data tbody td:nth-of-type(2){
+  color: #FFFFFF !important;
+}
+
+/* Comments */
+.pl-c
+{
+  color: #7c7c7a !important;
+}
+
+/* Function */
+.pl-k, tbody tr:first-child .blob-code, tbody tr:last-child .blob-code
+{
+  color: #F92672 !important;
+}
+
+/* Function Name */
+.pl-en
+{
+  color: #A6E22E !important;
+}
+
+/* Function Method */
+.pl-c1
+{
+  color: #66D9EF !important;
+}
+/* "'s around Strings */
+.pl-pds
+{
+  color: #FD971F !important;
+}
+
+/* Strings */
+.pl-s
+{
+  color: #FD971F !important;
+}
+
