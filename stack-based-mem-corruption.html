@@ -457,6 +457,43 @@
 
                     <p class="section-lead">Outlined in the blue box, is the 2nd argument being passed to read(). The instruction lea eax, [ebp-0x40] (lea stands for Load Effective Address) will subtract the value currently in the EBP register by 0x40 (64 in decimal) and place the result in the EAX register. Since EBP points to the base of the current function’s stack frame, this instruction will result in an address that is 64 bytes offset from the base of func1()’s stack frame. Perfect, so now we know exactly how the stack frame will be laid out when the call to read() requests input; our original exploit plan should work. Below is a diagram depicting how func1()’s stack frame will be laid out:</p>
 
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure38.png" alt="figure38" width="350" height="441">
+                    <p><i>figure 38</i></p>
+
+                    <p class="section-lead"><i>*Note: in the diagram the arg1, arg2, and arg3 represent the arguments being passed to read().</i></p>
+                    <br>
+
+                    <p class="section-lead">Detailing our original exploit plan:
+                    <li>Place shellcode into the buffer (shellcode is 26 bytes)</li>
+                    <li>Fill remaining buffer space with junk bytes (64 - 26 = 38 bytes)</li>
+                    <li>Overwrite saved EBP with 4 junk bytes</li>
+                    <li>Overwrite return address with 4-byte starting address of the buffer</li>
+                    <br>
+                    <br>
+
+                    This just leaves us with figuring out what the explicit starting address of the buffer will be. We know that the starting address will be 64 bytes below where the EBP register points, but we don’t know where EBP itself will point during execution of func1(). One quick way to resolve this is to cause the program to segfault by corrupting the return address with an invalid address and then examining the core dump. The core dump will contain the memory and register states of the program at the time of the segfault. In this example, we should be able to cause a segfault with 69 bytes of input or more:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure39.png" alt="figure39" width="852" height="100">
+                    <p><i>figure 39</i></p>
+
+                    <p class="section-lead">Here 72 bytes of input was chosen (68 ‘A’s followed by 4 ‘B’s) just to double check stack alignment. If our expected alignment was correct, then the process should segfault from an invalid return address of ‘BBBB’ or 0x42424242. After loading up the core file into gdb, we can see that everything went as expected. Next we can examine the memory contents of the stack around where the ESP register is pointing (it should be pointing 4 bytes above where the return address was since that was the last thing popped off of the stack before the process crashed).</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure40.png" alt="figure40" width="852" height="400">
+                    <p><i>figure 40</i></p>
+
+                    <p class="section-lead">Outlined in the blue box above is the first 4 bytes of our input, which is located at address 0xffffd340 (0xffffd33c + 0x4). Now that we’ve obtained the buffer’s address, we can finally create our payload and test it out. Shown below is a short Python script that will generate the payload and print it:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure41.png" alt="figure41" width="852" height="100">
+                    <p><i>figure 41</i></p>
+
+                    <p class="section-lead">Similar to previous examples, we can run the Python script and pipe its output to the vulnerable program. If all goes well, then we should get a new shell prompt, which typically a /bin/sh prompt will be a single ‘#’ or ‘$’ or sometimes nothing at all:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure42.png" alt="figure42" width="852" height="100">
+                    <p><i>figure 42</i></p>
+
+                    <p class="section-lead">Well that kind of went as expected, except for one important detail. The first attempt to pipe the payload into the program seems to have failed, no new shell spawned, we didn’t even get a segmentation fault with a core dump... As it turns out, the payload did it’s job correctly, a new shell was in fact spawned, but the standard file descriptors were closed after we piped the payload in, so we had no way to communicate with newly spawned shell. In order to fix this, we can use the cat command with no arguments to keep communication with the process open. And giving it a second go, we successfully pop a root shell from a buffer overflow vulnerability! Congratulations!</p>
+
+
                     <br>
                     <br>
                     <p id="NOPsleds" class="lead section-lead"><b>NOP Sleds</b></p>
@@ -466,16 +503,55 @@
                     <div id="YourMomsAdirtyBit"><br><br></div>
                     <p class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
                     <hr>
-                    <p class="section-lead">Summary</p>
+                    <p class="section-lead">Summary:<br>
+                    In the previous section we looked at how to exploit a buffer overflow by redirecting execution flow to shellcode. This allowed us to inject and execute arbitrary code within the context of a running process. However, modern x86-64 Intel processors (as well as many other processors) now have a protection mechanism that attempts to prevent execution of injected code; the dirty bit or more commonly referred to as the NX bit. When a process has the NX bit enabled memory segments of the process’s virtual address space are given execution permissions. If the processor attempts to execute instructions within a segment that does not have executable permission, then the process segfaults.</p>
                     <br>
                     <p class="lead section-lead">Section-Index:</p>
                     <p class="section-lead">
-                    <li>Memory Page Permissions</li>
-                    <li>Preventing Shellcode</li>
+                    <li>Executable Permissions</li>
+                    <li>Enabling Non-Executable Stack</li>
                     </p>
                     <hr>
                     <br>
-                    <p class="section-lead">[TO-DO]</p>
+                    <p class="lead section-lead">Executable Permissions:</p>
+                    <p class="section-lead">Looking back at the section on virtual address space segments, it was mentioned that each segment (i.e. Stack, Heap, Code, etc…) had it’s own read, write, and execute permissions, much like the file permissions of a Unix system. These permissions can be used to effectively prevent execution of injected code, which is not to say that code can’t be injected, but execution of said code will be prevented.<br>
+                    Implementation of NX relies on the operating system’s page table structure. Simply put, page tables are used to translate physical memory addresses into virtual memory addresses and vice versa. Allocation of physical memory is managed in chunks referred to as page frames (somewhat similar to allocation of memory in a process’s heap segment). When a new process is about to begin execution, pages in physical memory need to be allocated for the new process. The pages’ starting addresses are then translated to corresponding virtual addresses and stored in a page table. When the now executing process requests an address, the kernel is responsible for translating that virtual address to a physical address (if you’re unfamiliar or rusty on Unix/Linux page table management, I suggest checking out this <a href="https://www.kernel.org/doc/gorman/html/understand/">resource</a>).<br>
+                    A process’s virtual address segments are, abstractly, just pages in physical memory. That being said, each page can be given RWX permissions. When the executing process requests a virtual address, the resulting physical address’ permissions per can be verified. This is done by setting the No-eXecute (dirty) bit. The NX bit is the 63rd bit of a 64 bit page table entry, in other words, it’s the most significant bit. If this bit is set to 1, then it means that this page of memory does NOT have execute permissions, otherwise, execution is allowed.  So how should these RWX permissions be appointed to effectively prevent shellcode execution? The answer to this question depends on each virtual address segment’s purpose:
+
+                    <li>Code: Holds machine instructions to be executed</li>
+                    <li>Data/BSS: Stores initialized/uninitialized global variables</li>
+                    <li>Heap: Used for dynamic memory management</li>
+                    <li>Stack: Stores function frames and local variable data</li>
+                    <br>
+                    <br>
+
+                    Based on the descriptions above, the only segment that should have execution permission is the Code segment; all other segments only need read and write permissions. Additionally, the Code segment should have read permissions since machine instructions need to be read. However, the Code segment should not have write permissions since that would allow an attacker to inject and execute their shellcode. Also, just as a general note, the Code segment should never be writable anyways as that would allow the binary to possibly modify itself (though, it sure would be fun to debug a C program who’s off-by-one error-induced pointer corruption caused a few input bytes to overwrite instructions in the Code segment…).<br>
+
+                    To simplify this a little, memory regions can be categorized in one of two ways:
+
+                    <li>Region is used to store machine instructions (Permissions needed: Read, Execute)</li>
+                    <li>Region is used for data storage (Permissions needed: Read, Write)</li>
+                    <br>
+                    <br>
+
+                    The main point of this categorization is to avoid giving write permissions to an executable memory region or vice versa. Of course, there’s specialized situations for making an executable region writable, such as for dynamic code generation but it comes with a risk.</p>
+
+                    <p class="lead section-lead"><b>Enabling Non-Executable Stack:</b></p>
+                    <p class="section-lead">By default, NX bit is enabled for a compiled binary if the OS supports it, though it’s important to note that 32 bit systems do not support NX bit as the 63 bit of a page table entry is needed. In the exploit examples shown thus far, we’ve compiled 32 bit binaries on a 64 bit system, so NX bit is supported. (If you’re on a 32 bit system, PAX or ExecShield are required to enforce executable space protection). The execute permission of the stack segment can be toggled with the gcc compiler option -z execstack. Let’s put this to the test and recompile the last shellcode example program with NX enabled. When we previously attempted to exploit this program we injected shellcode into a buffer on the stack, pointed the EIP register to it (by overwriting the return address), and popped a root shell. If we attempt the same exploit (you might need to adjust the buffer’s starting address since the binary was recompiled) with NX enabled, we get a less satisfying result:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure43.png" alt="figure43" width="852" height="400">
+                    <p><i>figure 43</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is a failed exploit attempt that resulted in a segmentation fault. Analysis of the core file shows that the segfault occurred when the EIP register pointed to the address 0xffffd360. Examining the memory contents at that address displays the start of the shellcode, however, the operating system caught the attempt to execute instructions within the stack segment and produced a segmentation fault.<br>
+
+                    As a side note, you can easily verify if an ELF file has NX enabled (assuming you have a copy of the file) by (1), parsing the file’s header info, which gdb-peda’s checksec command can easily do for you, or (2) attaching a debugger to the running process, setting a breakpoint, and analyzing the process’s virtual address segment permissions. Below is an example of doing both with gdb-peda:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure44.png" alt="figure44" width="852" height="400">
+                    <p><i>figure 44</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is gdb-peda’s checksec output showing NX is enabled. Outlined in the red box is the vmmap output for the stack segment, and in the 3rd column is the segment’s permission showing ‘rw-p’, no e(x)ecute permission.<br>
+
+                    This brings us to the question of how do we bypass NX? Or better yet, how can we still subvert normal program execution flow to exploit the vulnerable process in a meaningful way without using shellcode? Well, put simply, Return-Oriented-Programming (ROP).</p>
                     
 
                     <div id="Ret2Libc"><br><br></div>
