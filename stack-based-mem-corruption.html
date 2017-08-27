@@ -384,7 +384,7 @@
                     <p class="section-lead">In this next example we’re finally going to look at actual shellcode. As mentioned at the start of this section, shellcode is referred to as such because it’s typically used to spawn a shell within the vulnerable process. In more technical terms, we’re going to inject machine instructions that when executed will spawn /bin/sh as a child process of the vulnerable one. We will then be able to interact with the child process and run system commands just as we would normally on a command line or terminal.</p>
                     <p class="section-lead">So how do we go about creating shellcode that will accomplish this seemingly arduous task of spawning a whole new process? Well, let’s hunt down what happens when we spawn a new shell from the command line. If we explicitly invoke /bin/sh, we (very unsurprisingly) get a new shell, but this doesn’t tell us much. Here’s a great opportunity to use the command line program strace in order to see what system calls are being invoked during creation and execution of a new process. Here’s the output from running strace on /bin/sh:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure29.png" alt="figure29" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure29.png" alt="figure29" width="852" height="717">
                     <p><i>figure 29</i></p>
 
                     <p class="section-lead">Outlined in the blue box is just an example of running /bin/sh, listing the directory contents and then exiting. More importantly though, outlined in the red box is the first line of output from running strace on /bin/sh. We can see that the first system call made when spawning a new shell (or any process for that matter) is to a system library function named execve(). From the Linux manual pages:<br><br>
@@ -398,17 +398,17 @@
 
                     Based on the manual page description of execve(), we can use it to execute any binary file we want within the system as long as we know it’s location and have permission. However, before blindly writing shellcode to invoke a system call we’ve (possibly) never used before, let’s write a quick C program to test it out. It’s usually easier to debug a small C program than standalone assembly code. Below is an example of a C program that will invoke execve() on the filename ‘/bin/sh’:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure30.png" alt="figure30" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure30.png" alt="figure30" width="852" height="329">
                     <p><i>figure 30</i></p>
 
                     <p class="section-lead">At first glance, the parameters for execve() may seem a bit odd. To give a brief explanation, the 1st argument is a pointer to a string, which is an explicit file path to the binary file. The 2nd argument is a pointer to an array of pointers where the pointer elements point to arguments for the soon to be executed binary file. This is exactly the same as when you pass command line arguments to a C program with char *argv[] as a parameter for the main function. Additionally, it’s worth noting that the 1st argument (if not the only argument) of a program is it’s name, which is why execve()’s 2nd argument in the above example is just a pointer to what’s essentially it’s 1st argument. Lastly, the 3rd argument is another pointer to an array of pointers to environment variables. However, we do not need to use the 3rd parameter in this case so we can just leave it NULL. If we compile the above program and execute it, we should be in a new shell just as if we had run /bin/sh from the command line:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure31.png" alt="figure31" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure31.png" alt="figure31" width="852" height="235">
                     <p><i>figure 31</i></p>
 
                     <p class="section-lead">Great, so now that we know how to use execve() to spawn a new process, let’s write our shellcode! Just like in the 1st shellcode example, we’re going to create a .asm file and insert BITS 32 as a header (since the target architecture is x86). The next code snippet shows the assembly instructions used to set up a system call to execve() with /bin/sh as its parameters:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure32.png" alt="figure32" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure32.png" alt="figure32" width="852" height="1085">
                     <p><i>figure 32</i></p>
 
                     <p class="section-lead">The assembly is fairly straight-forward in terms of instructions used and shouldn’t be too difficult to understand. The important part to remember is conventions for processor register usage when establishing a system call in x86. The operating system expects certain data in certain registers once it’s interrupt handler is invoked with the int 0x80 instruction. The register usage is as follows:<br>
@@ -427,24 +427,24 @@
 
                     <p class="section-lead">Now we can use the nasm assembler to assemble the file and examine the result. The assembler will create a flat binary file that contains nothing more than raw bytes representing the x86 opcodes (machine instructions) for the assembly we just wrote. Here’s the output:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure33.png" alt="figure33" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure33.png" alt="figure33" width="852" height="303">
                     <p><i>figure 33</i></p>
 
                     <p class="section-lead">In the above image, the second command, outlined in blue, is just a script used to print the shellcode in little-endian and in the correct syntax for testing/usage in C and Python programs (outlined in red). The script used can be found <a href="https://gist.github.com/fervagar/45341ee012533721b0e8">here</a>. Before attempting to inject the shellcode, it’s a good idea to test it so that later if the exploit fails we can be fairly confident that it’s not due to faulty shellcode. One way we can test it is to write a short C program that will store the shellcode in a buffer and then jump execution to the buffer’s starting address. This C program requires a bit of syntactical magic in order to treat the buffer address as a function pointer but is a neat method for achieving dynamic code execution in C:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure34.png" alt="figure34" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure34.png" alt="figure34" width="852" height="317">
                     <p><i>figure 34</i></p>
 
                     <p class="section-lead">Below is the result of compiling and running the shellcode test:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure35.png" alt="figure35" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure35.png" alt="figure35" width="852" height="228">
                     <p><i>figure 35</i></p>
 
                     <p class="section-lead">It’s important to note that the program was compiled with the -z execstack option. In short, this will allow execution of instructions outside of the text segment (or shared library), otherwise your test will likely result in a segfault. We’ll shed more light on executable space protection in the next section though.<br>
 
                     So now that we have working shellcode, all we need to do is use it in the payload for a vulnerable program. For this example we’re going to use a fairly simple C program, no stack canaries or extra functionality, just a straightforward buffer overflow vulnerability and a few print statements:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure36.png" alt="figure36" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure36.png" alt="figure36" width="852" height="880">
                     <p><i>figure 36</i></p>
 
                     <p class="section-lead"><i>*Note: compiled with gcc -m32 -mpreferred-stack-boundary=2 shell1.c -o shell1 -fno-stack-protector -z execstack</i></p>
@@ -452,7 +452,7 @@
 
                     <p class="section-lead">At first glance we can already get a pretty good idea for how the exploit will work and how the payload will need to be aligned. In func1() we’re given a buffer size of 64 bytes, and from the call to read we are allotted up to 76 bytes of input that will be read into the buffer. Since there’s no other variables declared and no gcc-generated canary in func1()’s stack frame (we know this since the binary file was compiled with fno-stack-protector), then it’s fairly safe to assume that the saved base pointer sits directly at the end (top) of the buffer. So the exploit we’ll most likely be (from start to finish) our shellcode, plus some junk bytes to fill the rest of the buffer, plus 4 more junk bytes to overwrite the saved base pointer, and lastly 4 more bytes to overwrite the original return address. Though, it’s always better to practice our reversing skills and read the disassembly to be sure. Here’s gdb’s output for func1()’s disassembly:</p>
 
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure37.png" alt="figure37" width="852" height="129">
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure37.png" alt="figure37" width="852" height="1204">
                     <p><i>figure 37</i></p>
 
                     <p class="section-lead">Outlined in the blue box, is the 2nd argument being passed to read(). The instruction lea eax, [ebp-0x40] (lea stands for Load Effective Address) will subtract the value currently in the EBP register by 0x40 (64 in decimal) and place the result in the EAX register. Since EBP points to the base of the current function’s stack frame, this instruction will result in an address that is 64 bytes offset from the base of func1()’s stack frame. Perfect, so now we know exactly how the stack frame will be laid out when the call to read() requests input; our original exploit plan should work. Below is a diagram depicting how func1()’s stack frame will be laid out:</p>
