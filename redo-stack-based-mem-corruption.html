@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>UOSec</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../css/resources.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Home</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                        <li>
+                                <a href="../resources.html">Resources</a>
+                        </li>
+                    <li>
+                        <a href="../info.html">Info</a>
+                    </li>
+                    <li>
+                        <a href="../challenges.html">Challenges</a>
+                    </li>
+                    <li>
+                        <a href="../schedule.html">Schedule</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <header class="image-bg-fluid-height">
+        <img class="img-responsive img-center" src="../Images/UOSEC_logo2.png" alt="">
+    </header>
+
+    <!-- Content Section -->
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Stack-Based Memory Corruption</h1>
+                    <h2>Exploitation and Mitigation</h2>
+                    <br>
+                    <p class="lead section-lead">Index:</p>
+                    <p class="section-lead">
+                    <li><a href="#VASpace">Virtual Address Space of 32 bit ELFs</a></li>
+                    <li><a href="#StackSegment">Understanding the Stack Segment</a></li>
+                    <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</li>
+                    <li><a href="#StackCanary">Stack Canaries</a></li>
+                    <li><a href="#Shellcode">Shellcode</a></li>
+                    <li><a href="#YourMomsAdirtyBit">Non-eXecutable Stack</a></li>
+                    <li><a href="#Ret2Libc">Ret-To-Libc</a></li>
+                    <li><a href="#ASLR">Address Space Layout Randomization</a></li>
+                    <li><a href="#ROPing">Return Oriented Programming</a></li>
+                    </p>
+                    <hr>
+                    
+                    <div id="VASpace"><br><br></div>
+                    <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
+                    <hr>
+                    <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
+                    </p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
+                    <p><i>figure 1</i></p>
+                    <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
+                    <b>Segment Descriptions:</b>
+                    <li><b>Code: </b>Contains CPU instructions for executing the program</li>
+                    <li><b>Data: </b>Stores initialized global variables</li>
+                    <li><b>BSS: </b>Stores unitialized global variables</li>
+                    <li><b>Heap: </b>Linked-list for dynamic memory allocation</li>
+                    <li><b>Stack: </b>Contains function frames and local variable data</li>
+                    <li><b>Kernel: </b>Space reserved for kernel execution</li>
+                    <br>
+                    <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
+                    <br><br>
+                    The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. If you’re curious about the explicit segment starting addresses for a particular binary on a UNIX/Linux based system, you can throw the binary into GDB and examine its memory mappings with “info proc mappings”. </p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure2.png" alt="figure2" width="945" height="352">
+                    <p><i>figure 2</i></p>
+                    <p class="section-lead">The above image describes the VAS layout of a 32-bit ELF binary named call_instr. The row outlined in red describes the Code segment, and going down the list, yellow describes the Heap, green describes the shared libraries, and purple describes the Stack. If you’re unfamiliar with gdb, the steps to view a program’s VAS layout are as follows:
+                    <li>$gdb <_path/_to/_binary/_file></li>
+                    <li>$gdb break <some_function_name></li>
+                    <li>$gdb run</li>
+                    <li>$gdb info proc mappings</li>
+                    <br>
+                    This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
+                    <p><i>figure 3</i></p>
+
+
+                    <div id="StackSegment"><br><br></div>
+                    <p class="lead section-lead"><b>Stack Segment: </b></p>
+                    <hr>
+                    <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
+                    <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
+                    <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
+                    <br>
+                    These two values need to be saved in order to resume execution of the caller function once the callee function has returned. In addition, two general-purpose processor registers are used in maintaining order of the stack:
+                    <br><br>
+                    <li><b>EBP (Extended Base Pointer): </b>Holds the base address of the currently executing function’s stack frame</li>
+                    <li><b>ESP (Extended Stack Pointer): </b>Holds the current address of the top of the currently executing function’s stack frame (which implies the top of the stack segment as a whole)</li>
+                    <br>
+                    <i>*Note:  if you’re rusty on x86 general-purpose registers or unfamiliar with the x86 ISA, here’s a reading recommendation: <a href="http://www.cs.virginia.edu/~evans/cs216/guides/x86.html">Guide to x86</a></i>
+                    <br><br>
+                    Looking back at the example program used in gdb earlier, if we were to pause execution right before foo1() returned, it’s stack would look similar to the following image:</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure4.png" alt="figure4">
+                    <p><i>figure 4</i></p>
+
+                    <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
+                    
+
+                    <div id="ClassicStackBufferOverflow"><br><br></div>
+                    <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
+                    <hr>
+                    <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
+                    <br>
+                    Let’s take a look at a basic example. Given the following source code:
+                    <br><br>
+                    <i>*Compiled with: gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example</i></p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure5.png" alt="figure5" width="40%" height="40%">
+                    <p>figure5</p>
+
+                    <p class="section-lead">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
+                    <br><br>
+                    <i>*Note: main’s stack-frame is colored blue and func1’s is colored green.</i></p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure6.png" alt="figure6">
+                    <p><i>figure 6</i></p>
+
+                    <p class="section-lead">As the diagram attempts to demonstrate, user input data is being written towards saved data on the stack, such as <i>func1’s</i> error variable and even main’s stack-frame. If we provide, say 33 bytes of input data, then we can overwrite the first byte of <i>func1’s error</i> variable. Since main assumes an error occurred if <i>func1’s</i> return value is nonzero, we can easily test for the buffer overflow by providing 33 bytes of data and checking if the program prints “Failed to read input data”.
+                    <br><br>
+                    <i>*Note: that in the below example, providing 32 ‘A’s as input corrupted the error variable because a newline ‘\n’  character was appended to the end of our input by python’s print function, increasing the input size to 33 bytes.</i></p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure7.png" alt="figure7" width="765" height="93">
+                    <p><i>figure 7</i></p>
+
+                    <p class="section-lead">As we can see from the above example, overflowing the buffer by 1 byte corrupted <i>func1’s error</i> variable. Even though our input was written to the buffer successfully, main received a nonzero return value from <i>func1</i> and assumed an error occurred, causing “Failed to read input data” to be printed to the terminal. Here’s what the stack segment would look like (roughly) right before <i>func1</i> returns after providing 32 ‘A’s as input:</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure8.png" alt="figure8">
+                    <p><i>figure 8</i></p>
+
+                    <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
+                    
+
+                    <div id="StackCanary"><br><br></div>
+                    <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
+                    <hr>
+                    <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
+                    <br>
+                    <p class="lead section-lead">Section-Index:</p>
+                    <p class="section-lead">
+                    <li><a href="#Mimicing">Mimicing a Stack Canary</a></li>
+                    <li><a href="#Stack-Protector">GCC's Stack-Protector</a></li>
+                    <li><a href="#BypassingCanaries">Bypassing Stack Canaries</a></li>
+                    </p>
+                    <hr>
+                    <br>
+                    <p id="Mimicing" class="lead section-lead"><b>Mimicing a Stack Canary:</b></p>
+                    <p class="section-lead">
+                    We can modify the previous buffer overflow example program to mimic a stack canary:</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure9.png" alt="figure3" width="500" height="600">
+                    <p><i>figure 9</i></p>
+
+                    <p class="section-lead">Now, if we overflow buf with input size greater than 32, the first byte of the canary variable will be overwritten. Here’s what the stack would roughly look like right before func1 returns:
+                    <i>*Note: the reason that our canary value looks mangled is because it’s bytes are in reverse order (e.g. Little Endian. Here’s a good resource link on Endianness if you need it: <a href="http://bfy.tw/39vC">Endianness</a>)</i></p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure10.png" alt="figure10">
+                    <p><i>figure 10</i></p>
+
+                    <p class="section-lead">Here’s the results of testing our super-secure canary:</p>
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure11.png" alt="figure11" width="762" height="95">
+                    <p><i>figure 11</i></p>
+                    <br>
+
+                    <p id="Stack-Protector" class="lead section-lead"><b>GCC's Stack-Protector:</b></p>
+                    <p class="section-lead">We can see that providing 15 bytes of input caused no issues, however, 36 bytes of input corrupted our canary value and execution of main never resumed; program exited cleanly.<br><br>
+                    Unfortunately our super-secure canary required modification of the source code by adding an extra variable and conditional statement. In which case, if our program was several thousand lines of code, we’d have to add this in every function with a buffer… Not exactly ideal from a programming perspective. Thankfully we can use gcc (GNU C Compiler) to implement the stack canaries for us automagically with the -fstack-protector or -fstack-protector-all flags. From the gcc manual pages ( <a href="https://linux.die.net/man/1/gcc">gcc man pages</a>):<br><br>
+                    <hr>
+                    <b>-fstack-protector: </b><br>
+                    Emit extra code to check for buffer overflows, such as stack smashing attacks. This is done by adding a guard variable to functions with vulnerable objects. This includes functions that call alloca, and functions with buffers larger than 8 bytes. The guards are initialized when a function is entered and then checked when the function exits. If a guard check fails, an error message is printed and the program exits.<br><br>
+                    <b>-fstack-protector-all: </b><br>
+                    Like -fstack-protector except that all functions are protected.<hr><br>
+                    If we recompile our previous program using gcc’s stack-protection:<br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example2 <b>-fstack-protector</b></i><br>
+                    We can then look at the disassembly of <i>func1</i> for gcc’s canary implementation:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure12.png" alt="figure12" width="480" height="500">
+                    <p><i>figure 12</i></p>
+
+                    <p class="section-lead">The lines of disassembly above that are outlined in blue/red are the instructions implemented by gcc to store and check the canary value. The three lines in blue (1) move the randomly generated canary value from the Data segment into the eax register. (2) The canary value is then moved from the eax register into func1’s stack-frame at [ebp-0x4]. Notice that the first parameter for fgets is an address at [ebp-0x24], which is the start address of our buffer (instruction is highlighted in blue). Which means that the canary value is directly on top of our buffer; 0x24 - 0x4 = 0x20 = (2 * 16^1) + (0 * 16^0) = 32. The next instruction then xor’s eax with itself to zero-out the register and proceed with normal execution.
+                    <br><br>
+                    Right before func1’s function epilogue, there’s four bolded instructions that check the canary value for any changes. First, the canary value is copied into the edx register. The edx register is then xor’d with a backup of the original canary value stored in the Data segment. If the xor results in 0, then the je ( jump if equal) instruction jumps execution flow to the function epilogue. However, if the xor result is non-zero, then __stack_chk_fail is called which ultimately exits the process. The diagram below depicts how the stack segment would look immediately after user input is written to the buffer:
+                    <br>
+                    <i>*Note: that func1’s error variable and canary variable have moved to [ebp-0x2c] and [ebp-0x28] respectively. GCC has moved their place in the stack-frame to the other side of our buffer, out of write-direction. This is so they aren't overwritten in the event of a buffer overflow originating from that particular stack-frame. It’s like standing up-wind of a cattle farm, if you catch my 'drift'.</i></p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure13.png" alt="figure13">
+                    <p><i>figure 13</i></p>
+                    <br>
+                    <br>
+
+                    <p id="BypassingCanaries" class="lead section-lead"><b>Bypassing Stack Canaries:</b></p>
+                    <p class="section-lead">This brings us to methods and techniques for bypassing stack canaries. Which should also help to enlighten you on how to properly implement canaries when securing your own programs. The following is an outline of this section:
+                    <br>
+                    <li><a href="#GuessingCanaries">Guessing the canary value</a></li>
+                    <li><a href="#MemLeak">Memory Leak</a></li>
+                    <li><a href="#ExceptionHandler">Corrupting the Exception Handler</a></li>
+                    <li>Further reading: <a href="https://www.corelan.be/index.php/2009/09/21/exploit-writing-tutorial-part-6-bypassing-stack-cookies-safeseh-hw-dep-and-aslr/">Bypassing Stack Cookies</a></li></p>
+                    <br>
+                    <p id="GuessingCanaries" class="lead section-lead">Guessing the canary value:</p>
+                    <p class="section-lead">Since the stack canary value is compared with the backup canary value in the Data segment, it doesn’t matter if we overwrote the canary, so long as we overwrite it with the same value; the stack check will be none the wiser.
+                    <br>
+                    Looking back at our own implementation of a stack canary (before we compiled it with -fstack-protector), we can easily bypass it by overwriting func1’s canary variable with the same value it was initialized to; 0xdeadbeef. It’s a good idea to look at the disassembly nonetheless just to double-check our payload alignment:</p>
+                    
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure14.png" alt="figure14" width="495" height="408">
+                    <p><i>figure 14</i></p>
+
+                    <p class="section-lead"></p>From the outlined instruction above, we can confirm that func1’s canary variable occupies the first four bytes of memory adjacent to the buffer. So if we give 32 bytes of input plus four bytes of 0xdeadbeef, then the process should not exit and instead return to main. Lets test it out:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure15.png" alt="figure15" width="775" height="77">
+                    <p><i>figure 15</i></p>
+
+                    <p class="section-lead">Perfect! So in the first command, 32 ‘A’s were given as input which corrupted the canary value as shown earlier (remember that a newline character is appended to our input). Then, in the second command, 32 ‘A’s were given plus the four bytes of 0xdeadbeef (note that the four bytes are in little endian; least significant bytes first) resulting in the check to pass and returning execution to main even though we overwrote the canary and corrupted the error variable.
+                    <br>
+                    Admittedly, that example is pretty trivial. The canary value is hard-coded and can be identified with a quick glance at the disassembly; no guessing needed. Next is an example of when a canary value is not hard-coded, but instead is randomized per process execution. However, the randomized value is very predictable and we can take the same approach in attempting to overwrite it with an equal value. The source code is shown below:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure16.png" alt="figure16" width="490" height="876">
+                    <p><i>figure 16</i></p>
+
+                    <p class="section-lead">Here I suggest that you try this one on your own. See if you can create a payload script that will predict the canary value, overwrite it, and still return to main. If you’re at a loss for how to predict the canary value in this scenario, I would read up on insecure RNG seeds. This type of vulnerability is applicable across the board, not just in terms of C and stack canaries.
+                    <br>
+                    <i>*Note: The above code can be compiled with:<br>
+                    gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example3</i></p>
+                    <br>
+                    <br>
+
+                    <p id="MemLeak" class="lead section-lead">Memory Leak:</p>
+                    <p class="section-lead">Here we’re going to assume that the stack canary is implemented properly, it’s randomized per call, and the RNG seed is near impossible to predict. Now, our options for bypassing it are mostly based on other possible vulnerabilities within the program. One such vulnerability would be a memory leak that allows us to read the canary value from memory at execution time. The following C code is a modification of the canary_example.c program that now asks the user to input an ID number for the input data. We are a going to compile it with gcc’s stack protection on:
+                    <br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 canary_example.c -o canary_example4 -fstack-protector</i></p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure17.png" alt="figure17" width="498" height="877">
+                    <p><i>figure 17</i></p>
+
+                    <p class="section-lead">On line 27 of the program, there’s a blatant Format-String vulnerability (if you’re unfamiliar with this type of vulnerability, here’s a good article about it: <a href="https://www.exploit-db.com/docs/28476.pdf">Exploit-DB: Format String Vulnerability</a>), which we can use to read the canary value before the second fgets call. The following image shows the output of running the program normally, and then using hex format specifiers (%x) in the ID to leverage the Format-String vulnerability into printing memory contents:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure18.png" alt="figure18" width="775" height="162">
+                    <p><i>figure 18</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is the stack canary generated by gcc’s stack protection. Surrounding the canary are (left) the 0 values from func1’s call to memset on line 25, and (right) the saved EBP and Return Address values of func1. Now all that’s needed to exploit the program is a script that we can use to parse the program output for the canary value and dynamically craft a payload for the buffer overflow vulnerability. My suggestion is to use python’s subprocess module or this python exploit development library: <a href="https://github.com/Gallopsled/pwntools">PwnTools</a>. I’ll leave creation of the exploit script to you though. It’s good practice!</p>
+                    <br>
+                    <br>
+
+                    <p id="ExceptionHandler" class="lead section-lead">Corrupting the Exception Handler:</p>
+                    <p class="section-lead">[TO-DO]</p>
+                    
+
+                    <div id="Shellcode"><br><br></div>
+                    <p class="lead section-lead"><b>Shellcode</b></p>
+                    <hr>
+                    <p class="section-lead">Shellcode is nothing more than a sequence of architecture specific machine instructions that can be injected into a running process. If execution flow can be redirected to the shellcode, then the processor will begin executing those instructions. The reason this type payload is referred to as shellcode is that it is generally used to pop a new shell from the vulnerable process, allowing an attacker to directly interact with the host system and even escalate their privileges within that system.</p>
+                    <br>
+                    <p class="lead section-lead">Section-Index:</p>
+                    <p class="section-lead">
+                    <li><a href="#CreatingShellcode">Creating Shellcode</a></li>
+                    <li><a href="#UsingShellcode">Using Shellcode:</a></li>
+                    <li><a href="#RedirectingExecution">Example 1: Redirecting Execution Flow</a></li>
+                    <li><a href="#CraftingThePayload">Example 1: Crafting The Payload</a></li>
+                    <li><a href="#WritingOutTheTextSeg">Example 1: Writing Out the Text Segment</a></li>
+                    <li><a href="#Example2">Example 2</a></li>
+                    <li><a href="#NOPsleds">NOP Sleds, the Astroglide for your processor</a></li>
+                    </p>
+                    <hr>
+                    <br>
+                    <p id="CreatingShellcode" class="lead section-lead"><b>Creating Shellcode</b></p>
+                    <p class="section-lead">[TO-DO]</p>
+                    <br>
+                    <br>
+                    <p id="UsingShellcode" class="lead section-lead"><b>Using Shellcode</b></p>
+                    <p class="section-lead">Let’s look at two shellcode exploit examples. Both will be executed by exploiting the buffer overflow vulnerability from the previous canary_example program except with a slight modification.</p>
+                    <br>
+                    <p class="lead section-lead">Example 1</p>
+                    <p class="section-lead">In this first example we’re going to add a simple function to the canary_example program (which I’ve renamed to shellcode_example.c for this section). The print_protected_data() function is simple but will never be called under normal execution flow. The source code and gcc compiler options are shown below:<br>
+                    <i>gcc -m32 -mpreferred-stack-boundary=2 shellcode_example.c -o shellcode_example -z execstack<br>
+                    *Note: The compiler option “-z execstack” at the end is to disable executable stack protection, which is discussed in the next section.</i></p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure19.png" alt="figure20" width="523" height="575">
+                    <p><i>figure 19</i></p>
+
+                    <p class="section-lead">Given the above program, our first goal will be to print the string “This should never be printed!” using shellcode. All and all, this is a pretty trivial goal but serves to prove that we can easily write any process memory out over standard streams. The other addition to the above program is the third line in func1() which prints out the starting address for it’s 32-byte buffer. This will make it easier for us to redirect execution flow to our shellcode. Of course, we could use a debugger or disassembler to pinpoint the address but that’s out of scope for this material.</p>
+                    <br>
+                    <p id="RedirectingExecution" class="lead section-lead">Redirecting Execution Flow</p>
+                    <p class="section-lead">In order to execute our shellcode via classic stack-based buffer overflow, we’ll need to overwrite func1()’s Return Address and point it to the start of our shellcode (aka, the starting address of the buffer). Since a callee’s Return Address is a pointer value to the next instruction to be executed by the caller function once the callee returns, we can overwrite it with a different address. This way, when the callee returns, instead of execution resuming where the caller left off, it instead attempts to execute instructions at the address we overwrote the Return Address with. Below is a diagram showing a rough depiction of what the shellcode_example program will look like right before func1 returns:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure20.png" alt="figure20">
+                    <p><i>figure 20</i></p>
+
+                    <p class="section-lead">In this context, func1 is the callee function (stack frame is colored green-ish) which was called by the main function, which is the caller function (stack frame is colored light-gray). Notice that the Return Addresses (denoted with RET) both point to an address within the Code segment. Our goal will be to point func1’s Return Address to the start of the buffer, in which case, if we’ve stashed our shellcode there, the processor will begin to execute it!</p>
+                    <br>
+                    <p id="CraftingThePayload" class="lead section-lead">Crafting the Payload</p>
+                    <p class="section-lead">Now we need to create some shellcode which will be a sequence of machine instructions that will write the “protected” string out to the terminal. We can do this by first writing the instructions in assembly code, and then use an assembler to, well…, assemble our shellcode (what a surprise!). We’re going to take advantage of the UNIX system call procedure which indexes system calls in a table and passes arguments over general purpose registers.<br>
+                    <i>*Note: If you’re unfamiliar with UNIX System Calls, I would suggest reading this tutorial: <a href="http://asm.sourceforge.net/intro/hello.html">SourceForge asm tutorial</a> and here’s a nice system call reference for 32-bit UNIX systems: <a href="http://syscalls.kernelgrok.com/">Syscall Ref Guide</a></i><br>
+                    We’re essentially going to write assembly instructions that are equivalent to (from a source code perspective):</p>
+
+                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure21.png" alt="figure21">
+                    <p><i>figure 21</i></p>
+
+                    <p class="section-lead">In order to setup the write() system call, first we need to load 4 into the EAX register; 4 is the system call number for write(). Once the the kernel’s system call handler is invoked using the int 0x80 or syscall instructions, it will expect the EAX register to hold the number of the system call to invoke. From there, we will need to load the arguments for write() going from left to right into the EBX, ECX, and EDX registers respectively (e.g. EBX = 1, ECX = string_addr, EDX = 12). Now we just need to find the address of the “protected” string and we’ll be good to go.
+                    <br>
+                    Using the objdump command we can disassemble the print_protected_data() function to find the string’s address. The following image shows the output from objdump which is piped into grep so we can filter it for the print_protected_data() function:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure22.png" alt="figure22" width="806" height="165">
+                    <p><i>figure 22</i></p>
+
+                    <p class="section-lead">Outlined in blue is the argument passed to puts(), which is the address of the string for it to print. We can safely assume that it’s the address of the string we’re looking for since the function shouldn’t be printing anything else (you can double check in a debugger like gdb if you want). So now that we’ve got all of our arguments for the write() system call, let’s create the assembly for the shellcode.
+                    <br>
+                    Create a new assembly file with the “.s” extension and then write out the instructions. The following image shows the instructions a chose to write but there are many different ways to achieve the functionality:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure23.png" alt="figure23" width="740" height="318">
+                    <p><i>figure 23</i></p>
+
+                    <p class="section-lead"><i>*Note: the al, bl, and dl, sub-registers are used instead of eax, ebx, and edx. Since 1-byte values are being loaded into these registers, we can minimize the shellcode size by using the 8-bit sub-registers. This will also get rid of unwanted null-bytes in the shellcode.</i></p>
+                    <br>
+
+                    <p class="section-lead">The lines of assembly after the first int 0x80 instruction are used to call the exit() system call once write() has returned. It isn’t necessary to call exit() but it will prevent the process from seg-faulting after our shellcode has executed.
+                    <br>
+                    Compile your shellcode using the nasm command (checkout the nasm manual pages if you’re not familiar with it). This will produce an object file that we can use hexdump on to print out the machine instructions for our shellcode. Shown below is the output from the above assembly example:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure24.png" alt="figure24" width="838" height="75">
+                    <p><i>figure 24</i></p>
+
+                    <p class="section-lead">Now we can use a simple Python script to craft the payload and send it as input to the shellcode_example program. The payload will need to:<br>
+                    <li>Fill the buffer with shellcode (the above shellcode is 25 bytes).</li>
+                    <li>Fill the remaining space up until the Return Address with junk bytes: (buf + error var + saved base pointer = 32 + 4 + 4 = 40 bytes; 40 - 25 = 15) The junk bytes can be whatever you want them to be, they’re just there to fill space.</li>
+                    <li>Overwrite the 4-byte Return Address with the starting address of buf (if you run the shellcode_example program, this will be the address it prints out before asking for user input).</li><br>
+                    The image below shows the Python script that will print the payload:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure25.png" alt="figure25" width="852" height="129">
+                    <p><i>figure 25</i></p>
+
+                    <p class="section-lead">The script output can then be piped directly into an execution of the shellcode_example program and if all goes as planned, the string “This should never be printed” should be written out to the terminal:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure26.png" alt="figure26" width="862" height="86">
+                    <p><i>figure 26</i></p>
+
+                    <p class="section-lead">Great, so now that our shellcode is working, we can try a more verbose approach to writing process memory out. For example, what if we were conducting a remote black-box test of the previous program and we didn’t have access to the binary file, how could we print out the protected data? Well, we know that we’re dealing with a 32-bit ELF, and we know that memory segments like the Code and Data segments start at a specific virtual address, 0x08048000 and 0x08049000 respectively… So, let’s just print out the entire Code segment!</p>
+                    <br>
+                    <p id="WritingOutTheTextSeg" class="lead section-lead">Getting your own copy of a remote binary</p>
+                    <p class="section-lead">Let’s modify the assembly instructions of our shellcode so that instead of writing out 12 bytes from the address 0x080485a0, it writes out 4095 (0xfff) bytes of data from the Code segment of the process. The following image shows the modified assembly instructions:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure27.png" alt="figure27" width="740" height="318">
+                    <p><i>figure 27</i></p>
+                    <p class="section-lead"><i>*Note: on line 9, the register has been changed from dl to dx since the size parameter is now larger than 1 byte. The dx register is a 16-bit sub-register of EDX.</i></p>
+                    <br>
+                    <p class="section-lead">Now we can assemble our shellcode with nasm, put it in our Python script from earlier, pipe it in as input to an execution of the shellcode_example program, and check the output. Though, I suggest redirecting the output into a new file or else this won’t be of much use. The following screen-shot shows the results of first running the exploit and redirecting its output to a file called “output_file”, then running the file command on “output_file”, and finally attempting to execute the “output_file”:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure28.png" alt="figure28" width="852" height="129">
+                    <p><i>figure 28</i></p>
+
+                    <p class="section-lead">Perfect! So now we have our own copy of the binary file that we can disassemble, reverse engineer, and test locally! (that’s assuming a scenario where we didn’t before and we could only run the process remotely).</p>
+                    <br>
+                    <p id="Example2" class="lead section-lead">Example 2</p>
+                    <p class="section-lead">In this next example we’re finally going to look at actual shellcode. As mentioned at the start of this section, shellcode is referred to as such because it’s typically used to spawn a shell within the vulnerable process. In more technical terms, we’re going to inject machine instructions that when executed will spawn /bin/sh as a child process of the vulnerable one. We will then be able to interact with the child process and run system commands just as we would normally on a command line or terminal.</p>
+                    <p class="section-lead">So how do we go about creating shellcode that will accomplish this seemingly arduous task of spawning a whole new process? Well, let’s hunt down what happens when we spawn a new shell from the command line. If we explicitly invoke /bin/sh, we (very unsurprisingly) get a new shell, but this doesn’t tell us much. Here’s a great opportunity to use the command line program strace in order to see what system calls are being invoked during creation and execution of a new process. Here’s the output from running strace on /bin/sh:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure29.png" alt="figure29" width="852" height="500">
+                    <p><i>figure 29</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is just an example of running /bin/sh, listing the directory contents and then exiting. More importantly though, outlined in the red box is the first line of output from running strace on /bin/sh. We can see that the first system call made when spawning a new shell (or any process for that matter) is to a system library function named execve(). From the Linux manual pages:<br><br>
+                    <hr>
+                    <b>#include <unistd.h><br>
+                    int execve(const char *filename, char *const argv[], char *const envp[]);</b><br>
+                    <b>execve()</b> executes the program pointed to by filename.  filename must
+                    be either a binary executable, or a script starting with a line of
+                    the form:<br>
+                    #! interpreter [optional-arg]<hr><br>
+
+                    Based on the manual page description of execve(), we can use it to execute any binary file we want within the system as long as we know it’s location and have permission. However, before blindly writing shellcode to invoke a system call we’ve (possibly) never used before, let’s write a quick C program to test it out. It’s usually easier to debug a small C program than standalone assembly code. Below is an example of a C program that will invoke execve() on the filename ‘/bin/sh’:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure30.png" alt="figure30" width="852" height="129">
+                    <p><i>figure 30</i></p>
+
+                    <p class="section-lead">At first glance, the parameters for execve() may seem a bit odd. To give a brief explanation, the 1st argument is a pointer to a string, which is an explicit file path to the binary file. The 2nd argument is a pointer to an array of pointers where the pointer elements point to arguments for the soon to be executed binary file. This is exactly the same as when you pass command line arguments to a C program with char *argv[] as a parameter for the main function. Additionally, it’s worth noting that the 1st argument (if not the only argument) of a program is it’s name, which is why execve()’s 2nd argument in the above example is just a pointer to what’s essentially it’s 1st argument. Lastly, the 3rd argument is another pointer to an array of pointers to environment variables. However, we do not need to use the 3rd parameter in this case so we can just leave it NULL. If we compile the above program and execute it, we should be in a new shell just as if we had run /bin/sh from the command line:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure31.png" alt="figure31" width="852" height="100">
+                    <p><i>figure 31</i></p>
+
+                    <p class="section-lead">Great, so now that we know how to use execve() to spawn a new process, let’s write our shellcode! Just like in the 1st shellcode example, we’re going to create a .asm file and insert BITS 32 as a header (since the target architecture is x86). The next code snippet shows the assembly instructions used to set up a system call to execve() with /bin/sh as its parameters:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure32.png" alt="figure32" width="852" height="350">
+                    <p><i>figure 32</i></p>
+
+                    <p class="section-lead">The assembly is fairly straight-forward in terms of instructions used and shouldn’t be too difficult to understand. The important part to remember is conventions for processor register usage when establishing a system call in x86. The operating system expects certain data in certain registers once it’s interrupt handler is invoked with the int 0x80 instruction. The register usage is as follows:<br>
+
+                    <li>EAX: contains the system call number</li>
+                    <li>EBX: contains the system call’s 1st parameter</li>
+                    <li>ECX: contains the system call’s 2nd parameter</li>
+                    <li>EDX: contains the system call’s 3rd parameter</li>
+                    <li>EDI: contains the system call’s 4th parameter</li>
+                    <li>ESI: contains the system call’s 5th parameter</li>
+                    <li>Any additional parameters are passed on the stack</li>
+                    <br>
+                    <br>
+
+                    You can also use this Linux Syscall Reference Table https://syscalls.kernelgrok.com/ to easily lookup system call numbers and correct register usage for any x86 system call.</p>
+
+                    <p class="section-lead">Now we can use the nasm assembler to assemble the file and examine the result. The assembler will create a flat binary file that contains nothing more than raw bytes representing the x86 opcodes (machine instructions) for the assembly we just wrote. Here’s the output:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure33.png" alt="figure33" width="852" height="100">
+                    <p><i>figure 33</i></p>
+
+                    <p class="section-lead">In the above image, the second command, outlined in blue, is just a script used to print the shellcode in little-endian and in the correct syntax for testing/usage in C and Python programs (outlined in red). The script used can be found <a href="https://gist.github.com/fervagar/45341ee012533721b0e8">here</a>. Before attempting to inject the shellcode, it’s a good idea to test it so that later if the exploit fails we can be fairly confident that it’s not due to faulty shellcode. One way we can test it is to write a short C program that will store the shellcode in a buffer and then jump execution to the buffer’s starting address. This C program requires a bit of syntactical magic in order to treat the buffer address as a function pointer but is a neat method for achieving dynamic code execution in C:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure34.png" alt="figure34" width="852" height="100">
+                    <p><i>figure 34</i></p>
+
+                    <p class="section-lead">Below is the result of compiling and running the shellcode test:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure35.png" alt="figure35" width="852" height="85">
+                    <p><i>figure 35</i></p>
+
+                    <p class="section-lead">It’s important to note that the program was compiled with the -z execstack option. In short, this will allow execution of instructions outside of the text segment (or shared library), otherwise your test will likely result in a segfault. We’ll shed more light on executable space protection in the next section though.<br>
+
+                    So now that we have working shellcode, all we need to do is use it in the payload for a vulnerable program. For this example we’re going to use a fairly simple C program, no stack canaries or extra functionality, just a straightforward buffer overflow vulnerability and a few print statements:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure36.png" alt="figure36" width="852" height="300">
+                    <p><i>figure 36</i></p>
+
+                    <p class="section-lead"><i>*Note: compiled with gcc -m32 -mpreferred-stack-boundary=2 shell1.c -o shell1 -fno-stack-protector -z execstack</i></p>
+                    <br>
+
+                    <p class="section-lead">At first glance we can already get a pretty good idea for how the exploit will work and how the payload will need to be aligned. In func1() we’re given a buffer size of 64 bytes, and from the call to read we are allotted up to 76 bytes of input that will be read into the buffer. Since there’s no other variables declared and no gcc-generated canary in func1()’s stack frame (we know this since the binary file was compiled with fno-stack-protector), then it’s fairly safe to assume that the saved base pointer sits directly at the end (top) of the buffer. So the exploit we’ll most likely be (from start to finish) our shellcode, plus some junk bytes to fill the rest of the buffer, plus 4 more junk bytes to overwrite the saved base pointer, and lastly 4 more bytes to overwrite the original return address. Though, it’s always better to practice our reversing skills and read the disassembly to be sure. Here’s gdb’s output for func1()’s disassembly:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure37.png" alt="figure37" width="852" height="400">
+                    <p><i>figure 37</i></p>
+
+                    <p class="section-lead">Outlined in the blue box, is the 2nd argument being passed to read(). The instruction lea eax, [ebp-0x40] (lea stands for Load Effective Address) will subtract the value currently in the EBP register by 0x40 (64 in decimal) and place the result in the EAX register. Since EBP points to the base of the current function’s stack frame, this instruction will result in an address that is 64 bytes offset from the base of func1()’s stack frame. Perfect, so now we know exactly how the stack frame will be laid out when the call to read() requests input; our original exploit plan should work. Below is a diagram depicting how func1()’s stack frame will be laid out:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure38.png" alt="figure38" width="350" height="441">
+                    <p><i>figure 38</i></p>
+
+                    <p class="section-lead"><i>*Note: in the diagram the arg1, arg2, and arg3 represent the arguments being passed to read().</i></p>
+                    <br>
+
+                    <p class="section-lead">Detailing our original exploit plan:
+                    <li>Place shellcode into the buffer (shellcode is 26 bytes)</li>
+                    <li>Fill remaining buffer space with junk bytes (64 - 26 = 38 bytes)</li>
+                    <li>Overwrite saved EBP with 4 junk bytes</li>
+                    <li>Overwrite return address with 4-byte starting address of the buffer</li>
+                    <br>
+                    <br>
+
+                    This just leaves us with figuring out what the explicit starting address of the buffer will be. We know that the starting address will be 64 bytes below where the EBP register points, but we don’t know where EBP itself will point during execution of func1(). One quick way to resolve this is to cause the program to segfault by corrupting the return address with an invalid address and then examining the core dump. The core dump will contain the memory and register states of the program at the time of the segfault. In this example, we should be able to cause a segfault with 69 bytes of input or more:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure39.png" alt="figure39" width="852" height="100">
+                    <p><i>figure 39</i></p>
+
+                    <p class="section-lead">Here 72 bytes of input was chosen (68 ‘A’s followed by 4 ‘B’s) just to double check stack alignment. If our expected alignment was correct, then the process should segfault from an invalid return address of ‘BBBB’ or 0x42424242. After loading up the core file into gdb, we can see that everything went as expected. Next we can examine the memory contents of the stack around where the ESP register is pointing (it should be pointing 4 bytes above where the return address was since that was the last thing popped off of the stack before the process crashed).</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure40.png" alt="figure40" width="852" height="400">
+                    <p><i>figure 40</i></p>
+
+                    <p class="section-lead">Outlined in the blue box above is the first 4 bytes of our input, which is located at address 0xffffd340 (0xffffd33c + 0x4). Now that we’ve obtained the buffer’s address, we can finally create our payload and test it out. Shown below is a short Python script that will generate the payload and print it:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure41.png" alt="figure41" width="852" height="100">
+                    <p><i>figure 41</i></p>
+
+                    <p class="section-lead">Similar to previous examples, we can run the Python script and pipe its output to the vulnerable program. If all goes well, then we should get a new shell prompt, which typically a /bin/sh prompt will be a single ‘#’ or ‘$’ or sometimes nothing at all:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure42.png" alt="figure42" width="852" height="100">
+                    <p><i>figure 42</i></p>
+
+                    <p class="section-lead">Well that kind of went as expected, except for one important detail. The first attempt to pipe the payload into the program seems to have failed, no new shell spawned, we didn’t even get a segmentation fault with a core dump... As it turns out, the payload did it’s job correctly, a new shell was in fact spawned, but the standard file descriptors were closed after we piped the payload in, so we had no way to communicate with newly spawned shell. In order to fix this, we can use the cat command with no arguments to keep communication with the process open. And giving it a second go, we successfully pop a root shell from a buffer overflow vulnerability! Congratulations!</p>
+
+
+                    <br>
+                    <br>
+                    <p id="NOPsleds" class="lead section-lead"><b>NOP Sleds</b></p>
+                    <p class="section-lead">[TO-DO]</p>
+                   
+
+                    <div id="YourMomsAdirtyBit"><br><br></div>
+                    <p class="lead section-lead"><b>Non-eXecutable Stack: (OS implemented)</b></p>
+                    <hr>
+                    <p class="section-lead">Summary:<br>
+                    In the previous section we looked at how to exploit a buffer overflow by redirecting execution flow to shellcode. This allowed us to inject and execute arbitrary code within the context of a running process. However, modern x86-64 Intel processors (as well as many other processors) now have a protection mechanism that attempts to prevent execution of injected code; the dirty bit or more commonly referred to as the NX bit. When a process has the NX bit enabled memory segments of the process’s virtual address space are given execution permissions. If the processor attempts to execute instructions within a segment that does not have executable permission, then the process segfaults.</p>
+                    <br>
+                    <p class="lead section-lead">Section-Index:</p>
+                    <p class="section-lead">
+                    <li>Executable Permissions</li>
+                    <li>Enabling Non-Executable Stack</li>
+                    </p>
+                    <hr>
+                    <br>
+                    <p class="lead section-lead">Executable Permissions:</p>
+                    <p class="section-lead">Looking back at the section on virtual address space segments, it was mentioned that each segment (i.e. Stack, Heap, Code, etc…) had it’s own read, write, and execute permissions, much like the file permissions of a Unix system. These permissions can be used to effectively prevent execution of injected code, which is not to say that code can’t be injected, but execution of said code will be prevented.<br>
+                    Implementation of NX relies on the operating system’s page table structure. Simply put, page tables are used to translate physical memory addresses into virtual memory addresses and vice versa. Allocation of physical memory is managed in chunks referred to as page frames (somewhat similar to allocation of memory in a process’s heap segment). When a new process is about to begin execution, pages in physical memory need to be allocated for the new process. The pages’ starting addresses are then translated to corresponding virtual addresses and stored in a page table. When the now executing process requests an address, the kernel is responsible for translating that virtual address to a physical address (if you’re unfamiliar or rusty on Unix/Linux page table management, I suggest checking out this <a href="https://www.kernel.org/doc/gorman/html/understand/">resource</a>).<br>
+                    A process’s virtual address segments are, abstractly, just pages in physical memory. That being said, each page can be given RWX permissions. When the executing process requests a virtual address, the resulting physical address’ permissions per can be verified. This is done by setting the No-eXecute (dirty) bit. The NX bit is the 63rd bit of a 64 bit page table entry, in other words, it’s the most significant bit. If this bit is set to 1, then it means that this page of memory does NOT have execute permissions, otherwise, execution is allowed.  So how should these RWX permissions be appointed to effectively prevent shellcode execution? The answer to this question depends on each virtual address segment’s purpose:
+
+                    <li>Code: Holds machine instructions to be executed</li>
+                    <li>Data/BSS: Stores initialized/uninitialized global variables</li>
+                    <li>Heap: Used for dynamic memory management</li>
+                    <li>Stack: Stores function frames and local variable data</li>
+                    <br>
+                    <br>
+
+                    Based on the descriptions above, the only segment that should have execution permission is the Code segment; all other segments only need read and write permissions. Additionally, the Code segment should have read permissions since machine instructions need to be read. However, the Code segment should not have write permissions since that would allow an attacker to inject and execute their shellcode. Also, just as a general note, the Code segment should never be writable anyways as that would allow the binary to possibly modify itself (though, it sure would be fun to debug a C program who’s off-by-one error-induced pointer corruption caused a few input bytes to overwrite instructions in the Code segment…).<br>
+
+                    To simplify this a little, memory regions can be categorized in one of two ways:
+
+                    <li>Region is used to store machine instructions (Permissions needed: Read, Execute)</li>
+                    <li>Region is used for data storage (Permissions needed: Read, Write)</li>
+                    <br>
+                    <br>
+
+                    The main point of this categorization is to avoid giving write permissions to an executable memory region or vice versa. Of course, there’s specialized situations for making an executable region writable, such as for dynamic code generation but it comes with a risk.</p>
+
+                    <p class="lead section-lead"><b>Enabling Non-Executable Stack:</b></p>
+                    <p class="section-lead">By default, NX bit is enabled for a compiled binary if the OS supports it, though it’s important to note that 32 bit systems do not support NX bit as the 63 bit of a page table entry is needed. In the exploit examples shown thus far, we’ve compiled 32 bit binaries on a 64 bit system, so NX bit is supported. (If you’re on a 32 bit system, PAX or ExecShield are required to enforce executable space protection). The execute permission of the stack segment can be toggled with the gcc compiler option -z execstack. Let’s put this to the test and recompile the last shellcode example program with NX enabled. When we previously attempted to exploit this program we injected shellcode into a buffer on the stack, pointed the EIP register to it (by overwriting the return address), and popped a root shell. If we attempt the same exploit (you might need to adjust the buffer’s starting address since the binary was recompiled) with NX enabled, we get a less satisfying result:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure43.png" alt="figure43" width="852" height="400">
+                    <p><i>figure 43</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is a failed exploit attempt that resulted in a segmentation fault. Analysis of the core file shows that the segfault occurred when the EIP register pointed to the address 0xffffd360. Examining the memory contents at that address displays the start of the shellcode, however, the operating system caught the attempt to execute instructions within the stack segment and produced a segmentation fault.<br>
+
+                    As a side note, you can easily verify if an ELF file has NX enabled (assuming you have a copy of the file) by (1), parsing the file’s header info, which gdb-peda’s checksec command can easily do for you, or (2) attaching a debugger to the running process, setting a breakpoint, and analyzing the process’s virtual address segment permissions. Below is an example of doing both with gdb-peda:</p>
+
+                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure44.png" alt="figure44" width="852" height="400">
+                    <p><i>figure 44</i></p>
+
+                    <p class="section-lead">Outlined in the blue box is gdb-peda’s checksec output showing NX is enabled. Outlined in the red box is the vmmap output for the stack segment, and in the 3rd column is the segment’s permission showing ‘rw-p’, no e(x)ecute permission.<br>
+
+                    This brings us to the question of how do we bypass NX? Or better yet, how can we still subvert normal program execution flow to exploit the vulnerable process in a meaningful way without using shellcode? Well, put simply, Return-Oriented-Programming (ROP).</p>
+                    
+
+                    <div id="Ret2Libc"><br><br></div>
+                    <p class="lead section-lead"><b>Return-To-Libc:</b></p>
+                    <hr>
+                    <p class="section-lead">Summary</p>
+                    <br>
+                    <p class="lead section-lead">Section-Index:</p>
+                    <p class="section-lead">
+                    <li>A Simple Example</li>
+                    <li>Linked Libraries: PLT and GOT are your fwends</li>
+                    <li>Passing Argument on the Stack</li>
+                    </p>
+                    <hr>
+                    <br>
+                    <p class="section-lead">[TO-DO]</p>
+                    
+
+                    <div id="ASLR"><br><br></div>
+                    <p class="lead section-lead"><b>Address Space Layout Randomization: (OS implemented)</b></p>
+                    <hr>
+                    <p class="section-lead">[TO-DO]</p>
+                    
+
+                    <div id="ROPing"><br><br></div>
+                    <p class="lead section-lead"><b>Return-Oriented Programming:</b></p>
+                    <hr>
+                    <p class="section-lead">[TO-DO]</p>
+                    <br>
+                    <br>
+                </div>
+            </div>
+        </div>
+    </section>
+    </section>
+
+    <!-- Fixed Height Image Aside -->
+    <!-- Image backgrounds are set within the full-width-pics.css file. -->
+    <aside class="image-bg-fixed-height"></aside>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <p>Copyright &copy; UOSec \x80\x01\x32\x0F</p>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container -->
+    </footer>
+
+    <!-- jQuery -->
+    <script src="../js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../js/bootstrap.min.js"></script>
+
+    <!-- Modal Script -->
+    <script src="../js/modalScript.js"></script>
+</body>
+</html>
+
+
+
+
+
+
