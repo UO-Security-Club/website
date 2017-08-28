@@ -146,15 +146,11 @@
                 <div class="col-lg-12">
                     <h1 class="section-heading">Classic Stack Buffer Overflow:</h1>
                     <h2>Corrupting Data On the Stack</h2>                   
-
-                    <!--<div id="ClassicStackBufferOverflow"><br><br></div>
-                    <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
-                    -->
                     <hr>
                     <p class="lead section-lead">Section Summary:</p>
                     <p class="section-lead">Blah blah filler text, more filler text.</p>
                     <hr>
-                    <p class="section-lead">Index:<br>
+                    <p class="lead section-lead">Index:<br>
                     <li><a href="#VASpace">Place holder 1</a></li>
                     <li><a href="#StackSegment">Place holder 2</a></li>
                     <li><a href="#ClassicStackBufferOverflow">Place holder 3</a></li>
@@ -185,22 +181,28 @@
 
                     <p class="section-lead">Of course, we could write further up the stack and corrupt the saved EBP and EIP (Return Address) values to subvert execution flow, which will be demonstrated shortly. So, aside from ruling out human error in programming (a bit unreasonable to expect), how can we defend against or prevent buffer overflows?</p>
                     
-
-                    <div id="StackCanary"><br><br></div>
-                    <p class="lead section-lead"><b>Stack Canary: (Compiler Implemented)</b></p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="container" id="StackCanary">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Stack Canaries:</h1>
+                    <h2>Detecting buffer overflows on the stack </h2>
                     <hr>
+                    <p class="lead section-lead">Section Summary:</p>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.</p>
-                    <br>
-                    <p class="lead section-lead">Section-Index:</p>
-                    <p class="section-lead">
+                    <hr>
+                    <p class="lead section-lead">Index:<br>
                     <li><a href="#Mimicing">Mimicing a Stack Canary</a></li>
                     <li><a href="#Stack-Protector">GCC's Stack-Protector</a></li>
                     <li><a href="#BypassingCanaries">Bypassing Stack Canaries</a></li>
                     </p>
                     <hr>
-                    <br>
                     <p id="Mimicing" class="lead section-lead"><b>Mimicing a Stack Canary:</b></p>
-                    <p class="section-lead">
+                    <p class="section-paragraph">
                     We can modify the previous buffer overflow example program to mimic a stack canary:</p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure9.png" alt="figure3" width="500" height="600">
                     <p><i>figure 9</i></p>
