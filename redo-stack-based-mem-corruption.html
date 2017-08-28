@@ -145,17 +145,18 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="section-heading">Classic Stack Buffer Overflow:</h1>
-                    <h2>Corrupting Data On the Stack</h2>                   
-                    <hr>
-                    <p class="lead section-lead">Section Summary:</p>
-                    <p class="section-lead">Blah blah filler text, more filler text.</p>
+                    <h2>Corrupting Data On the Stack</h2>
                     <hr>
                     <p class="lead section-lead">Index:<br>
                     <li><a href="#VASpace">Place holder 1</a></li>
                     <li><a href="#StackSegment">Place holder 2</a></li>
                     <li><a href="#ClassicStackBufferOverflow">Place holder 3</a></li>
-                    </p>
+                    </p>                   
                     <hr>
+                    <p class="lead section-lead">Section Summary:</p>
+                    <p class="section-lead">Blah blah filler text, more filler text.</p>
+                    <hr>
+                    <br>
                     <p class="section-paragraph">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
                     Let’s take a look at a basic example. Given the following source code:
@@ -192,6 +193,13 @@
                     <h1 class="section-heading">Stack Canaries:</h1>
                     <h2>Detecting buffer overflows on the stack </h2>
                     <hr>
+                    <p class="lead section-lead">Index:<br>
+                    <li><a href="#canary1">Canary Example 1: The Vulnerable Program</li>
+                    <li><a href="#Mimicing">Canary Example 2: Mimicing a Stack Canary</a></li>
+                    <li><a href="#Stack-Protector">GCC's Stack-Protector</a></li>
+                    <li><a href="#BypassingCanaries">Bypassing Stack Canaries</a></li>
+                    </p>
+                    <hr>
                     <p class="lead section-lead">Section Summary:</p>
                     <p class="section-lead">Also referred to as a stack cookie, a canary is a randomly generated 4-byte value (8-byte on 64 bit systems) that is placed in a stack frame directly on top of a buffer. The canary value is generated at run time and moved to the stack immediately after the function prologue. When said function is about to return, the canary value is validated for any corruption. If the canary value has been modified, then the function will not return, but instead invoke an exception handler. The security that stack canaries provide is dependent on the fact that overflowing a buffer overwrites all data on the stack in between the end of the buffer and the end of the overflow. Since the canary is placed directly at the end of the buffer, even a single-byte overflow will overwrite the first byte of the canary.<br>
                     Throughout this section we will be building off of a simple example program and modifying it each step of the way. The example programs will attempt to implement their own stack canary in order to protect important data on the stack. Eventually we’ll create a secure stack canary implementation and analyze in what scenarios even a secure canary implementation can be bypassed.<br>
@@ -201,13 +209,7 @@
 
                     The reason for defining these functions in a source file of their own is mainly for organization's sake. These functions are used in every example program in this section and are never changed. It seemed impractical to eat up visual space when displaying the source code of each example with redundant function definitions. However, if you’re compiling the example programs on your own system, the resulting binary will be the same whether you statically link the success and secure_login functions or define them all in one source file.</p>
                     <hr>
-                    <p class="lead section-lead">Index:<br>
-                    <li><a href="#canary1">Canary Example 1: The Vulnerable Program</li>
-                    <li><a href="#Mimicing">Canary Example 2: Mimicing a Stack Canary</a></li>
-                    <li><a href="#Stack-Protector">GCC's Stack-Protector</a></li>
-                    <li><a href="#BypassingCanaries">Bypassing Stack Canaries</a></li>
-                    </p>
-                    <hr>
+                    <br>
                     <p id="canary1" class="lead section-lead"><b>Canary Example 1: The Vulnerable Program</b></p>
                     <p class="section-paragraph">Displayed in the next figure is the source code for our first example program; canary1. The example program uses two functions (on lines 25 and 37) that are not defined within the source file but are instead defined in the libctf static library:
                     <br>
