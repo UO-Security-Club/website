@@ -88,11 +88,11 @@
                     <div id="VASpace"><br><br></div>
                     <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
                     <hr>
-                    <p class="section-lead">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
+                    <p class="section-paragraph">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
                     <p><i>figure 1</i></p>
-                    <p class="section-lead">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
+                    <p class="section-paragraph">The virtual address space ranges from 0x00000000 to 0xFFFFFFFF with the Code and Data segments starting at lower addresses, and the Kernel and Stack starting at higher addresses. It’s important to note that the Stack and Heap segments grow towards each other, filling and opening the space in-between as the process executes.<br><br>
                     <b>Segment Descriptions:</b>
                     <li><b>Code: </b>Contains CPU instructions for executing the program</li>
                     <li><b>Data: </b>Stores initialized global variables</li>
