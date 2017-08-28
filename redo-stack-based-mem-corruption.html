@@ -75,7 +75,7 @@
                     <p class="section-lead">
                     <li><a href="#VASpace">Virtual Address Space of 32 bit ELFs</a></li>
                     <li><a href="#StackSegment">Understanding the Stack Segment</a></li>
-                    <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</li>
+                    <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</a></li>
                     <li><a href="#StackCanary">Stack Canaries</a></li>
                     <li><a href="#Shellcode">Shellcode</a></li>
                     <li><a href="#YourMomsAdirtyBit">Non-eXecutable Stack</a></li>
@@ -136,19 +136,38 @@
                     <p><i>figure 4</i></p>
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
-                    
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="container" id="ClassicStackBufferOverflow">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Classic Stack Buffer Overflow:</h1>
+                    <h2>Corrupting Data On the Stack</h2>                   
 
-                    <div id="ClassicStackBufferOverflow"><br><br></div>
+                    <!--<div id="ClassicStackBufferOverflow"><br><br></div>
                     <p class="lead section-lead"><b>Classic Stack Buffer Overflow: </b></p>
+                    -->
                     <hr>
-                    <p class="section-lead">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
+                    <p class="lead section-lead">Section Summary:</p>
+                    <p class="section-lead">Blah blah filler text, more filler text.</p>
+                    <hr>
+                    <p class="section-lead">Index:<br>
+                    <li><a href="#VASpace">Place holder 1</a></li>
+                    <li><a href="#StackSegment">Place holder 2</a></li>
+                    <li><a href="#ClassicStackBufferOverflow">Place holder 3</a></li>
+                    </p>
+                    <hr>
+                    <p class="section-paragraph">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
                     Let’s take a look at a basic example. Given the following source code:
                     <br><br>
                     <script src="https://gist.github.com/jbrodnax/1c85139b617d0c53598836bc97b93aa2.js"></script>
                     <p>figure5</p>
 
-                    <p class="section-lead">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
+                    <p class="section-paragraph">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
                     <br><br>
                     <i>*Note: main’s stack-frame is colored blue and func1’s is colored green.</i></p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure6.png" alt="figure6">
