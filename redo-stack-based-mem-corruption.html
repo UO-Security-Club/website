@@ -168,8 +168,7 @@
                     <br>
                     <p class="section-paragraph">In <i>func1</i> we have allocated a 32-byte buffer on the stack with the variable named <i>buf</i>. A call to Libc’s <i>fgets</i> function is then used to read a maximum of 64 bytes of data into <i>buf</i>. If fgets <i>fails</i> to read any data from stdin (unfamiliar with stdin or standard streams in general? Here’s a helpful link: <a href="http://bfy.tw/AoYs">Standard Streams</a>) then a NULL pointer is returned, in which case, the error variable is set to 1 and returned. Otherwise, error remains equal to 0 when returned. In this example program, we are interested in the fact that <i>fgets</i> has a size parameter of 64, but is reading data from stdin into a buffer of size 32. This means that we can overflow the buffer by 64 - 32 = 32 bytes. If we feed some ‘A’s as input to the program, this is what the stack segment will look like right after fgets returns but right before <i>func1</i> returns:
                     <br><br>
-                    <i>*Note: main’s stack-frame is colored blue and func1’s is colored green.</i></p>
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure6.png" alt="figure6">
+                    <img src="../Images/lecture_note_images/overflow1-func1-frame.png" alt="figure6">
                     <p><i>figure 6</i></p>
 
                     <p class="section-lead">As the diagram attempts to demonstrate, user input data is being written towards saved data on the stack, such as <i>func1’s</i> error variable and even main’s stack-frame. If we provide, say 33 bytes of input data, then we can overwrite the first byte of <i>func1’s error</i> variable. Since main assumes an error occurred if <i>func1’s</i> return value is nonzero, we can easily test for the buffer overflow by providing 33 bytes of data and checking if the program prints “Failed to read input data”.
