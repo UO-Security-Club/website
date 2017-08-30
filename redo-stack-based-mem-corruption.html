@@ -174,7 +174,7 @@
                     <p class="section-lead">As the diagram attempts to demonstrate, user input data is being written towards saved data on the stack, such as <i>func1’s</i> error variable and even main’s stack-frame. If we provide, say 33 bytes of input data, then we can overwrite the first byte of <i>func1’s error</i> variable. Since main assumes an error occurred if <i>func1’s</i> return value is nonzero, we can easily test for the buffer overflow by providing 33 bytes of data and checking if the program prints “Failed to read input data”.
                     <br><br>
                     <i>*Note: that in the below example, providing 32 ‘A’s as input corrupted the error variable because a newline ‘\n’  character was appended to the end of our input by python’s print function, increasing the input size to 33 bytes.</i></p>
-                    <img src="../Images/lecture_note_images/classic_overflow/figure1.png" alt="figure1" width=90% height=90%>
+                    <img class="img-screen-shot" src="../Images/lecture_note_images/classic_overflow/figure1.png" alt="figure1">
                     <p><i>figure 1</i></p>
 
                     <p class="section-lead">As we can see from the above example, overflowing the buffer by 1 byte corrupted <i>func1’s error</i> variable. Even though our input was written to the buffer successfully, main received a nonzero return value from <i>func1</i> and assumed an error occurred, causing “Failed to read input data” to be printed to the terminal. Here’s what the stack segment would look like (roughly) right before <i>func1</i> returns after providing 32 ‘A’s as input:</p>

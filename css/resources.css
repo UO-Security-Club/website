@@ -34,6 +34,28 @@ body {
 	margin: 0 auto;
 }
 
+.imagedropshadow {
+    padding: 5px;
+    border: solid 1px #001615;
+}
+
+.img-screen-shot {
+    padding: 5px;
+    border: solid 1px #001615;
+    margin: 0 auto;
+    height: 90%;
+    width: 90%;
+}
+
+a:hover img.img-screen-shot {
+    border: solid 1px #CCC;
+    -moz-box-shadow: 1px 1px 5px #999;
+    -webkit-box-shadow: 1px 1px 5px #999;
+        box-shadow: 1px 1px 5px #999;
+}
+
+
+
 section {
     padding: 75px 0;
     background-color:#0d0d0d;
