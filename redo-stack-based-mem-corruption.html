@@ -70,12 +70,10 @@
                 <div class="col-lg-12">
                     <h1 class="section-heading">Stack-Based Memory Corruption</h1>
                     <h2>Exploitation and Mitigation</h2>
-                    <br>
+                    <hr>
                     <p class="lead section-lead">Index:</p>
                     <p class="section-lead">
-                    <li><a href="#VASpace">Virtual Address Space of Linux Processes</a></li>
-                    <li><a href="#StackSegment">Understanding the Stack Segment</a></li>
-                    <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</a></li>
+                    <li><a href="#WhereAreWe">Where are we and What is that?</a></li>
                     <li><a href="#StackCanary">Stack Canaries</a></li>
                     <li><a href="#Shellcode">Shellcode</a></li>
                     <li><a href="#YourMomsAdirtyBit">Non-eXecutable Stack</a></li>
@@ -88,7 +86,27 @@
                     <p class="section-lead">This page was made to be an educational resource for learning the basic techniques and tools used in exploitation of stack-buffer overflows in 32-bit binaries running on UNIX-based operating systems. Techniques for exploiting stack-buffer overflows have been around as early as 1972, with the earliest documented widespread exploitation of a buffer overflow being used by the Morris Worm in 1988. Later in 1996, exploitation techniques were popularized by Elias Levy’s well-known article “Smashing the Stack for Fun and Profit”. So, if ‘stack-smashing’ has been around for so long, why focus on it? Aren’t there more modern system-level vulnerabilities to study?<br>
                     Of course there’s more modern types of vulnerabilities to study, types that you should and will eventually learn if you haven’t already. However, buffer overflows are still one of the most severe vulnerabilities that can arise within system-level processes, and relative to other types of critical vulnerabilities, are still very prevalent to-date. Since buffer overflow vulnerabilities can be such a threat, many defense mechanisms have come about to mitigate exploitability. Most of these defense mechanisms fall into three different classes, stack canaries, executable memory permissions, and memory randomization; all of which will eventually be discussed on this page. Though, as stated before, these defense mechanisms ‘mitigate’ exploitability, making exploitation more difficult, but they do not prevent it.<br>
                     All in all, what areas of security you decide to focus on is subjective, despite any arguments for the severity and prevalence of a certain type of vulnerability. But if your interest is in native application security, binary hardening and vulnerability analysis, then buffer overflows are a great place to start. Learning exploitation of buffer overflows, how to redirect execution flow, how to bypass defense mechanisms, how to recognize an overflow from disassembly, and much more, all help to better understand the structures and designs behind a Unix-based operating system. You could just as easily sit down and read all of the man pages, but practicing exploitation of memory corruption vulnerabilities provides a means of hands-on testing and critical thinking (creativity), which can (is) worth much more than simply reading and highlighting. The end goal of learning to smash the stack is to build an intuition for binary exploitation and vulnerability analysis.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="container" id="WhereAreWe">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="section-heading">Where are we and What is that?</h1>
+                    <h2>Basics of the virtual address space and its segments</h2>
                     <hr>
+                    <p class="lead section-lead">Index:<br>
+                    <li><a href="#VASpace">Virtual Address Space of Linux Processes</a></li>
+                    <li><a href="#StackSegment">The Stack Segment</a></li>
+                    <li><a href="#ClassicStackBufferOverflow">A Classic Stack-Buffer Overflow</a></li>
+                    </p>                   
+                    <hr>
+                    <p class="lead section-lead">Section Summary:</p>
+                    <p class="section-lead">Blah blah filler text, more filler text.</p>
+                    <hr>
+                    <br>
                     <div id="VASpace"><br><br></div>
                     <p class="lead section-lead"><b>Virtual Address Space of Linux Processes:</b></p>
                     <hr>
@@ -120,10 +138,12 @@
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
                     <p><i>figure 3</i></p>
 
-
-                    <div id="StackSegment"><br><br></div>
-                    <p class="lead section-lead"><b>Stack Segment: </b></p>
                     <hr>
+                    <div id="StackSegment">
+                    <p class="lead section-lead"><b>Stack Segment: </b></p>
+                    </div>
+                    <hr>
+
                     <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
                     <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
                     <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
@@ -140,27 +160,13 @@
                     <p><i>figure 4</i></p>
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    <section>
-        <div class="container" id="ClassicStackBufferOverflow">
-            <div class="row">
-                <div class="col-lg-12">
-                    <h1 class="section-heading">Classic Stack Buffer Overflow:</h1>
-                    <h2>Corrupting Data On the Stack</h2>
+                
                     <hr>
-                    <p class="lead section-lead">Index:<br>
-                    <li><a href="#VASpace">Place holder 1</a></li>
-                    <li><a href="#StackSegment">Place holder 2</a></li>
-                    <li><a href="#ClassicStackBufferOverflow">Place holder 3</a></li>
-                    </p>                   
+                    <div id="ClassicStackBufferOverflow">
+                    <p class="lead section-lead"><b>Classic Stack-Buffer Overflow</b></p>
+                    </div>
                     <hr>
-                    <p class="lead section-lead">Section Summary:</p>
-                    <p class="section-lead">Blah blah filler text, more filler text.</p>
-                    <hr>
-                    <br>
+                    
                     <p class="section-paragraph">In a classic stack buffer overflow scenario, the most straight-forward exploit method is to overwrite the Return Address of the vulnerable function with a different valid address. This is possible since data written to a buffer is written in the opposite direction than the stack grows. Additionally, even overwriting the saved Base Pointer can be used to subvert execution flow; a technique referred to as Stack-Pivoting (in case you’re interested in looking it up).
                     <br>
                     Let’s take a look at a basic example. Given the following source code:
