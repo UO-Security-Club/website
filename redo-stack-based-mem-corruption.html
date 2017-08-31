@@ -106,10 +106,13 @@
                     <p class="lead section-lead">Section Summary:</p>
                     <p class="section-lead">Blah blah filler text, more filler text.</p>
                     <hr>
-                    <br>
-                    <div id="VASpace"><br><br></div>
+                    <br><br><br><br>
+
+                    <div id="VASpace">
                     <p class="lead section-lead"><b>Virtual Address Space of Linux Processes:</b></p>
+                    </div>
                     <hr>
+
                     <p class="section-paragraph">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure1.png" alt="figure1">
@@ -137,8 +140,9 @@
                     This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
                     <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
                     <p><i>figure 3</i></p>
-
                     <hr>
+                    <br><br><br><br>
+
                     <div id="StackSegment">
                     <p class="lead section-lead"><b>Stack Segment: </b></p>
                     </div>
@@ -160,8 +164,9 @@
                     <p><i>figure 4</i></p>
 
                     <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
-                
                     <hr>
+                    <br><br><br><br>
+                    
                     <div id="ClassicStackBufferOverflow">
                     <p class="lead section-lead"><b>Classic Stack-Buffer Overflow</b></p>
                     </div>
