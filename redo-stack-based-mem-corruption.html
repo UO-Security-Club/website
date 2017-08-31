@@ -73,7 +73,7 @@
                     <br>
                     <p class="lead section-lead">Index:</p>
                     <p class="section-lead">
-                    <li><a href="#VASpace">Virtual Address Space of 32 bit ELFs</a></li>
+                    <li><a href="#VASpace">Virtual Address Space of Linux Processes</a></li>
                     <li><a href="#StackSegment">Understanding the Stack Segment</a></li>
                     <li><a href="#ClassicStackBufferOverflow">Classic Stack Buffer Overflow</a></li>
                     <li><a href="#StackCanary">Stack Canaries</a></li>
@@ -84,9 +84,13 @@
                     <li><a href="#ROPing">Return Oriented Programming</a></li>
                     </p>
                     <hr>
-                    
+                    <p class="lead section-lead">What is this page for?</p>
+                    <p class="section-lead">This page was made to be an educational resource for learning the basic techniques and tools used in exploitation of stack-buffer overflows in 32-bit binaries running on UNIX-based operating systems. Techniques for exploiting stack-buffer overflows have been around as early as 1972, with the earliest documented widespread exploitation of a buffer overflow being used by the Morris Worm in 1988. Later in 1996, exploitation techniques were popularized by Elias Levy’s well-known article “Smashing the Stack for Fun and Profit”. So, if ‘stack-smashing’ has been around for so long, why focus on it? Aren’t there more modern system-level vulnerabilities to study?<br>
+                    Of course there’s more modern types of vulnerabilities to study, types that you should and will eventually learn if you haven’t already. However, buffer overflows are still one of the most severe vulnerabilities that can arise within system-level processes, and relative to other types of critical vulnerabilities, are still very prevalent to-date. Since buffer overflow vulnerabilities can be such a threat, many defense mechanisms have come about to mitigate exploitability. Most of these defense mechanisms fall into three different classes, stack canaries, executable memory permissions, and memory randomization; all of which will eventually be discussed on this page. Though, as stated before, these defense mechanisms ‘mitigate’ exploitability, making exploitation more difficult, but they do not prevent it.<br>
+                    All in all, what areas of security you decide to focus on is subjective, despite any arguments for the severity and prevalence of a certain type of vulnerability. But if your interest is in native application security, binary hardening and vulnerability analysis, then buffer overflows are a great place to start. Learning exploitation of buffer overflows, how to redirect execution flow, how to bypass defense mechanisms, how to recognize an overflow from disassembly, and much more, all help to better understand the structures and designs behind a Unix-based operating system. You could just as easily sit down and read all of the man pages, but practicing exploitation of memory corruption vulnerabilities provides a means of hands-on testing and critical thinking (creativity), which can (is) worth much more than simply reading and highlighting. The end goal of learning to smash the stack is to build an intuition for binary exploitation and vulnerability analysis.</p>
+                    <hr>
                     <div id="VASpace"><br><br></div>
-                    <p class="lead section-lead"><b>Virtual Address Space (32 bit ELFs):</b></p>
+                    <p class="lead section-lead"><b>Virtual Address Space of Linux Processes:</b></p>
                     <hr>
                     <p class="section-paragraph">The Virtual Address Space (VAS) is divided up into several memory segments, each with their own purpose, organization, and permissions. From a high-level perspective, the following diagram depicts a single running process’s Address Space Layout:
                     </p>
