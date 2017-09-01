@@ -99,6 +99,7 @@
                     <hr>
                     <p class="lead section-lead">Index:<br>
                     <li><a href="#VASpace">The Linux Virtual Address Space</a></li>
+                    <li><a href="#vmmapExample">Analyzing a Simple Example</a></li>
                     <li><a href="#StackSegment">The Stack Segment</a></li>
                     <li><a href="#ClassicStackBufferOverflow">A Classic Stack-Buffer Overflow</a></li>
                     </p>                   
@@ -127,19 +128,24 @@
                     <li><b>Kernel: </b>Space reserved for kernel execution</li>
                     <br>
                     <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
+                    <hr>
+                    <br><br><br><br>
+
+                    <div id="vmmapExample">
+                    <h2> > Analyzing a Simple Example</h2>
+                    </div>
+
+                    <p class="section-paragraph">Let’s create a simple C program and analyze it with gdb in order to get a more detailed understanding of the virtual address space. Shown below is the source code for a C program that will utilize the stack, heap, and data segments for storing variables:
                     <br><br>
-                    The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. If you’re curious about the explicit segment starting addresses for a particular binary on a UNIX/Linux based system, you can throw the binary into GDB and examine its memory mappings with “info proc mappings”. </p>
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure2.png" alt="figure2" width="945" height="352">
-                    <p><i>figure 2</i></p>
-                    <p class="section-lead">The above image describes the VAS layout of a 32-bit ELF binary named call_instr. The row outlined in red describes the Code segment, and going down the list, yellow describes the Heap, green describes the shared libraries, and purple describes the Stack. If you’re unfamiliar with gdb, the steps to view a program’s VAS layout are as follows:
-                    <li>$gdb <_path/_to/_binary/_file></li>
-                    <li>$gdb break <some_function_name></li>
-                    <li>$gdb run</li>
-                    <li>$gdb info proc mappings</li>
+                    <script src="https://gist.github.com/jbrodnax/6ef47e4ac6a6373f6ad920f6d77f632e.js"></script>
                     <br>
-                    This will start a gdb shell, set a breakpoint in the program (at whatever function you named), then run the program as a child process of gdb, and stop execution of the child once the breakpoint has been reached. Since the process is loaded in memory and its execution has paused, we can view its VAS layout with the gdb command <i>“info proc mappings”.</i> The source code for the binary used is shown below, and was compiled on a 64-bit system with <i>gcc -m32 -mpreferred-stack-boundary=2 file_name.c -o prog_name:</i></p>
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure3.png" alt="figure3" width="360" height="480">
+                    The vmmap-example1 program will print the address that each variable is located at in addition to the variable itself. We can then run the program in gdb and set breakpoints in order to directly examine the state of the process during execution, which will allow us to directly compare the program output with the virtual address space of the process. First let’s look at the program output, if everything works as expected, then main’s local variable should be at the highest address, followed by the heap variable, and lastly the global variable stored in the data segment:</p>
+                    <img class="img-responsive img-screen-shot" src="../Images/lecture_note_images/classic_overflow/figure2.png" alt="figure2">
+                    <p><i>figure 2</i></p>
+                    <p class="section-paragraph">Outlined in the blue boxes are the addresses that each variable is located in the virtual address space. Based on the output, the address 0xffffd354 is located in the stack segment, address 0x0804b410 is located in the heap segment, and address 0x0804a040 is located in the data segment. But let’s reaffirm that by using gdb to analyze the virtual address space of the process as it executes:</p>
+                    <img class="img-responsive img-screen-shot" src="../Images/lecture_note_images/classic_overflow/figure3.png" alt="figure3">
                     <p><i>figure 3</i></p>
+                    <p class="section-paragraph">In the screenshot above is the output of gdb-peda’s vmmap command. The vmmap-example1 program was provided as an argument to gdb, a breakpoint was set at func2, and finally the program was run, eventually reaching the breakpoint where can use the vmmap command. The vmmap output is formatted such that each row contains information regarding a particular segment in the process. The columns (from left to right) show the start and end address of the segment, followed by the permissions of the segment (read, write, and execute), and lastly the name of the segment. Comparing the output of the vmmap-example1 program to that of gdb’s vmmap command shows that the variables are where we expected. Address 0xffffd354 is within the range [0xfffdd000 - 0xffffe000], address 0x0804b410 is within the range [0x0804b000 - 0x0806c000], and address 0x0804a040 is within the range [0x0804a000 - 0x0804b000].</p>
                     <hr>
                     <br><br><br><br>
 
