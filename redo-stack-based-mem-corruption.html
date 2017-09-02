@@ -73,7 +73,7 @@
                     <hr>
                     <p class="lead section-lead">Index:</p>
                     <p class="section-lead">
-                    <li><a href="#WhereAreWe">Where are we and What is that?</a></li>
+                    <li><a href="#aBriefIntro">A Brief Introduction to Linux Processes</a></li>
                     <li><a href="#StackCanary">Stack Canaries</a></li>
                     <li><a href="#Shellcode">Shellcode</a></li>
                     <li><a href="#YourMomsAdirtyBit">Non-eXecutable Stack</a></li>
@@ -86,26 +86,36 @@
                     <p class="section-lead">This page was made to be an educational resource for learning the basic techniques and tools used in exploitation of stack-buffer overflows in 32-bit binaries running on UNIX-based operating systems. Techniques for exploiting stack-buffer overflows have been around as early as 1972, with the earliest documented widespread exploitation of a buffer overflow being used by the Morris Worm in 1988. Later in 1996, exploitation techniques were popularized by Elias Levy’s well-known article “Smashing the Stack for Fun and Profit”. So, if ‘stack-smashing’ has been around for so long, why focus on it? Aren’t there more modern system-level vulnerabilities to study?<br>
                     Of course there’s more modern types of vulnerabilities to study, types that you should and will eventually learn if you haven’t already. However, buffer overflows are still one of the most severe vulnerabilities that can arise within system-level processes, and relative to other types of critical vulnerabilities, are still very prevalent to-date. Since buffer overflow vulnerabilities can be such a threat, many defense mechanisms have come about to mitigate exploitability. Most of these defense mechanisms fall into three different classes, stack canaries, executable memory permissions, and memory randomization; all of which will eventually be discussed on this page. Though, as stated before, these defense mechanisms ‘mitigate’ exploitability, making exploitation more difficult, but they do not prevent it.<br>
                     All in all, what areas of security you decide to focus on is subjective, despite any arguments for the severity and prevalence of a certain type of vulnerability. But if your interest is in native application security, binary hardening and vulnerability analysis, then buffer overflows are a great place to start. Learning exploitation of buffer overflows, how to redirect execution flow, how to bypass defense mechanisms, how to recognize an overflow from disassembly, and much more, all help to better understand the structures and designs behind a Unix-based operating system. You could just as easily sit down and read all of the man pages, but practicing exploitation of memory corruption vulnerabilities provides a means of hands-on testing and critical thinking (creativity), which can (is) worth much more than simply reading and highlighting. The end goal of learning to smash the stack is to build an intuition for binary exploitation and vulnerability analysis.</p>
+                    <hr>
+                    <p class="lead section-lead">Expectations:</p>
+                    <p class="section-lead">Even though this page is meant to be an educational resource, it does not mean that it will answer all your questions, or will cater to everyone’s knowledge-base; this was created with expectations of material that you should already know. That being said, there are plenty of external resources linked on this page that are meant to fill in the gaps, and help get you up to speed on what’s discussed here. One of the most invaluable skills you can learn is how to teach yourself.<br>
+                    All of the external resources pertaining to a section will be listed in context throughout the section, as well as in a list in the introduction to the section.</p>
                 </div>
             </div>
         </div>
     </section>
     <section>
-        <div class="container" id="WhereAreWe">
+        <div class="container" id="aBriefIntro">
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="section-heading">Where are we and What is that?</h1>
-                    <h2>Basics of the virtual address space and its segments</h2>
+                    <h1 class="section-heading">A Brief Introduction to Linux Processes</h1>
+                    <h2>Narrowing Focus to the Stack Segment</h2>
                     <hr>
                     <p class="lead section-lead">Index:<br>
                     <li><a href="#VASpace">The Linux Virtual Address Space</a></li>
                     <li><a href="#vmmapExample">Analyzing a Simple Example</a></li>
                     <li><a href="#StackSegment">The Stack Segment</a></li>
                     <li><a href="#ClassicStackBufferOverflow">A Classic Stack-Buffer Overflow</a></li>
-                    </p>                   
+                    </p>
+                    <p class="lead section-lead">Section Resources:<br>
+                    <li><a href="http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/">Anatomy of a Program in Memory</a></li>
+                    <li><a href="https://youtu.be/akCce7vSSfw">LiveOverflow's Developing a Intuition for Binary Exploitation</a></li>
+                    <li><a href="http://www.cs.virginia.edu/~evans/cs216/guides/x86.html">x86 Assembly Guide</a></li>
+                    <li><a href="https://linux-audit.com/elf-binaries-on-linux-understanding-and-analysis/">ELF Binaries on Linux</a></li>
+                    </p>
                     <hr>
                     <p class="lead section-lead">Section Summary:</p>
-                    <p class="section-lead">Blah blah filler text, more filler text.</p>
+                    <p class="section-lead">[TO-DO]</p>
                     <hr>
                     <br><br><br><br>
 
@@ -127,7 +137,8 @@
                     <li><b>Stack: </b>Contains function frames and local variable data</li>
                     <li><b>Kernel: </b>Space reserved for kernel execution</li>
                     <br>
-                    <i>*Note: the kernel segment is referred to as Kernel-land, and all other segments are commonly referred to as User-land or User-space.</i>
+                    <p class="section-paragraph">The starting addresses of each segment listed in the diagram only serve as examples and do not pertain to every system. The reason that the virtual address space has a maximum address range of 0x00000000 0xFFFFFFFF is because that is the largest unsigned value that a 32 bit register can hold. Since this tutorial focuses on x86, the processor registers are only 32 bits in size (vs 64 bit). Doing a bit of simple math and remembering that 8 bits make a byte, then 32 bits divided by 8 equals 4 (bytes). The maximum 1-byte value is 0xFF (256 in decimal), so the maximum 4-byte value is 0xFFFFFFFF.<br>
+                    If you’re looking for more detailed information on the virtual address space then I recommend checking out Gustavo Duartes’ <a href="http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/">Anatomy of a Program in Memory.</a></p>
                     <hr>
                     <br><br><br><br>
 
