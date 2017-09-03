@@ -165,7 +165,7 @@
                     </div>
                     <hr>
 
-                    <p class="section-lead">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
+                    <p class="section-paragraph">The stack segment is as it’s name implies; a LIFO data structure where data is pushed and popped from a stack. Each element on the stack is a stack frame pertaining to an in-progress function. Within each stack frame, are sub-elements representing local variable data for that particular function as well as two saved pointer values:
                     <li><b>Return Address: </b>4-byte address of the caller function’s next instruction to execute (usually an address within the Code segment or a shared library function)</li>
                     <li><b>Saved Base Pointer: </b>4-byte address of the caller function’s base address</li>
                     <br>
@@ -176,11 +176,11 @@
                     <br>
                     <i>*Note:  if you’re rusty on x86 general-purpose registers or unfamiliar with the x86 ISA, here’s a reading recommendation: <a href="http://www.cs.virginia.edu/~evans/cs216/guides/x86.html">Guide to x86</a></i>
                     <br><br>
-                    Looking back at the example program used in gdb earlier, if we were to pause execution right before foo1() returned, it’s stack would look similar to the following image:</p>
-                    <img src="../Images/lecture_note_images/stack-based-mem-corruption/figure4.png" alt="figure4">
-                    <p><i>figure 4</i></p>
+                    Let’s take a look at an example that’s a simplification of the vmmap-example1.c program. This example defines 3 functions that call each other in a chain, just like in vmmap-example1, but instead only utilize the stack segment for storing function variables. The source code is shown below:<br>
+                    <script src="https://gist.github.com/jbrodnax/2ba3033dcf6078572e6c27e70b2be61f.js"></script>
 
-                    <p class="section-lead">The light-gray boxes represent main()’s stack frame, and the lower green boxes represent foo1()’s stack frame (RET denotes the Return Address).</p>
+                    [TO-DO] Stack diagram and parameter passing
+                    </p>
                     <hr>
                     <br><br><br><br>
 
